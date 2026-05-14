@@ -1,0 +1,71 @@
+---
+description: Test requirements per package
+globs: ["**/*.test.ts", "tests/**"]
+alwaysApply: true
+---
+
+# Testing rules
+
+## Coverage targets (M1)
+
+| Layer | Target | Why |
+|----|----|----|
+| `packages/adapter-sdk/` | n/a (types only) | Pure types, nothing to execute |
+| `packages/adapters/*/` | ≥80% line | Adapters are file-format parsers; bugs here are silent data loss |
+| `packages/core/` | ≥80% line, ≥90% branch on `retrieval.ts` | Federation logic is where ranking bugs hide |
+| `packages/cli/` | ≥70% line | Some glue is fine to leave to E2E |
+| `packages/mcp/` (M1.1+) | ≥80% line | Same logic risk as core |
+| `tests/e2e/` | every CLI command path | Smoke that the binary actually works |
+
+## Test file location
+
+- Adapter / core / mcp unit tests: **next to source** in `tests/` subdir of the package.
+  - Example: `packages/adapters/claude-code/tests/scan.test.ts`
+- End-to-end (spawning the CLI): `tests/e2e/<command>.test.ts`
+- Integration (multiple adapters + core, no CLI): `tests/integration/<scenario>.test.ts`
+- Shared fixtures: `tests/fixtures/<adapter-name>/`
+
+## Required test types
+
+### 1. Unit tests (per file)
+Standard happy path + 1-2 edge cases.
+
+### 2. Adapter conformance tests
+For each adapter, the **mandatory four** (see `adapter-design.mdc`):
+- `detect.test.ts`
+- `scan.test.ts`
+- `corrupt.test.ts`
+- `denylist.test.ts`
+
+### 3. CLI E2E tests
+Every command in `packages/cli/src/commands/` MUST have an E2E test that:
+- Spawns the actual `bin/omem` binary
+- Runs against `tests/fixtures/` (NEVER against real `~/.claude`)
+- Asserts exit code AND output schema (if `--json`)
+
+### 4. Cross-platform tests
+At least one E2E test runs on Windows in CI. Path-handling bugs are common and only show up there.
+
+### 5. Snapshot tests (when output schema matters)
+Any `--json` output has a snapshot test. Schema changes must be intentional.
+
+## Anti-patterns
+
+| Don't | Do |
+|----|----|
+| `expect(result).toBeTruthy()` | `expect(result.records).toHaveLength(3)` — assert specifics |
+| Test that depends on `~/.claude` existing | Use `tests/fixtures/claude-code/valid.jsonl` |
+| Test that prints to stdout in passing case | Tests are silent on green |
+| Mock `fs` with a global override | Use `tests/fixtures/` and pass paths via the API |
+| `.skip` or `.only` committed to main | Pre-commit lint catches; don't bypass |
+| One giant `it("does everything", ...)` | One `it` per behavior |
+
+## Running tests
+
+```bash
+bun test                              # all
+bun test packages/adapters/cursor     # one package
+bun test tests/e2e/scan.test.ts       # one file
+bun test --coverage                   # with coverage report
+bun test --watch                      # watch mode
+```

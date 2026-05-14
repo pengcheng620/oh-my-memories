@@ -1,0 +1,84 @@
+---
+description: Code style conventions
+alwaysApply: true
+---
+
+# Conventions
+
+## Naming
+
+| Kind | Convention | Example |
+|----|----|----|
+| File | `kebab-case.ts` | `claude-code-adapter.ts` |
+| Directory | `kebab-case` | `adapter-sdk/`, `claude-code/` |
+| Function / variable | `camelCase` | `parseJsonlLine`, `storageRoot` |
+| Type / interface / class | `PascalCase` | `MemoryRecord`, `IBaseAdapter` |
+| Interface prefix | `I` for SDK contracts only | `IBaseAdapter`, `IIdeAdapter` (pattern matches existing SDK) |
+| Constant (module-level frozen) | `SCREAMING_SNAKE` | `DEFAULT_DENYLIST`, `MAX_LINE_BYTES` |
+| Test file | `<source>.test.ts` | `scan.test.ts` |
+| Bun script | `kebab-case.ts` | `scripts/version-bump.ts` |
+
+## Imports
+
+- **Top of file only.** No inline `await import()` except in dynamic plugin loading (M4+).
+- **Type imports**: `import type { X } from '...'` when only types are used.
+- **Order**: external first, then `@oh-my-memories/*`, then relative. Biome's `organizeImports` enforces.
+- **Workspace deps**: import from `@oh-my-memories/<pkg>`, never `../../../other-pkg/src`.
+
+## Comments
+
+- Comments explain **why**, never **what**.
+- ❌ `// Increment counter`
+- ❌ `// Define the function`
+- ✅ `// Skip records older than 90 days; keeps recall result set < 1k for default queries`
+- ✅ `// JSONL files >100MB exist (long CC sessions); stream line-by-line to keep RAM bounded`
+
+## TypeScript
+
+- **Strict mode is on.** Don't disable.
+- **No `any`** without `// biome-ignore lint/suspicious/noExplicitAny: <reason>` on the same line.
+- **Prefer `unknown`** over `any` when the value comes from outside (`JSON.parse`, network).
+- **Return types on exported functions** are explicit. Inferred returns OK for internal.
+- **Errors**: throw `Error` subclass with a meaningful name (`AdapterDetectError`, `CorruptRecordError`). No `throw "string"`.
+
+## Async
+
+- **`async`/`await`**, not `.then()`.
+- **`AsyncIterable`** for streaming (adapters' `scan()`).
+- **`Promise.all`** when iterations are independent. Sequential `await` only when there's a dependency.
+- **No floating promises.** Either `await`, `void`, or pass to `Promise.all`.
+
+## Errors and exit codes
+
+CLI exit codes:
+- `0` — success
+- `1` — generic error (parse failure, unexpected exception)
+- `2` — bad CLI arg (parsing the user's command line)
+- `3` — adapter detection failed (no sources found)
+- `4` — IO error (permission denied, etc.)
+- `5` — partial success with errors (some adapters worked, some failed)
+
+JSON error shape (when `--json`):
+```json
+{ "ok": false, "error": { "code": "ADAPTER_DETECT_FAILED", "message": "...", "details": {} } }
+```
+
+## Cross-platform
+
+- **Paths**: always `node:path` (`join`, `resolve`). Never string-concat with `/`.
+- **Home**: `os.homedir()`. Never `process.env.HOME` (Windows).
+- **Line endings**: write files with `\n`. Read tolerantly (`\r\n` OK).
+- **Case**: filesystem case-sensitivity differs. Normalize to lowercase before string compares on adapter IDs.
+
+## Performance budgets (soft, M1)
+
+- `omem scan` finishes in <2s on a typical machine (10k records across 4 adapters)
+- `omem recall --all "<word>"` finishes in <500ms after first run (cache warms after scan)
+- CLI startup overhead <50ms (Bun cold start)
+- No single in-memory data structure exceeds 100MB during scan
+
+## Commits
+
+- Conventional Commits: `feat: ...`, `fix: ...`, `docs: ...`, `refactor: ...`, `test: ...`, `chore: ...`
+- Subject ≤72 chars
+- Body explains *why*, not *what*

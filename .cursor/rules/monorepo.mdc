@@ -1,0 +1,61 @@
+---
+description: Monorepo layout — which package owns what
+globs: ["packages/**", "skills/**", "tests/**"]
+alwaysApply: true
+---
+
+# Monorepo Layout — where things go
+
+This is a Bun workspace monorepo. **Cross-package imports go through workspace `package.json` deps**, never relative paths into another package's `src/`.
+
+## Package boundaries
+
+| If your change is about ... | It belongs in ... |
+|----|----|
+| CLI command parsing, flags, help text, exit codes | `packages/cli/` |
+| Output formatting (table / json / pretty) | `packages/cli/src/output/` |
+| Reading from a memory source (CC / Cursor / Codex / Serena) | `packages/adapters/<source>/` |
+| The interface every adapter implements | `packages/adapter-sdk/` |
+| Storage, indexing, retrieval, federation logic | `packages/core/` |
+| Exposing capabilities as MCP tools | `packages/mcp/` (M1.1+) |
+| Cross-platform path resolution (`~/.claude` vs `%USERPROFILE%`) | `packages/cli/src/platform/` |
+| Safety (denylist of secret-looking files) | `packages/cli/src/safety/` |
+| Shared utility used by 2+ adapters | `packages/adapters/_shared/` |
+| Test fixtures (sample JSONL, etc.) | `tests/fixtures/<adapter-name>/` |
+| End-to-end tests through CLI | `tests/e2e/` |
+
+## What each package may import
+
+```
+cli         →  core, adapters/*, adapter-sdk
+core        →  adapter-sdk                                (NOT cli, NOT adapters)
+mcp         →  core, adapter-sdk                          (NOT cli)
+adapters/*  →  adapter-sdk, adapters/_shared              (NOT core, NOT cli)
+adapter-sdk →  (nothing in this repo — pure types)
+```
+
+**Why**:
+- `core` and `mcp` must be testable without spawning a CLI.
+- `adapters/*` must be testable without `core` (adapter is dumb: read source → emit canonical records).
+- `cli` orchestrates: takes adapter outputs and feeds `core`.
+
+## Package naming on npm
+
+All packages publish under the `@oh-my-memories/*` scope:
+- `@oh-my-memories/cli` (the only one with a `bin`)
+- `@oh-my-memories/core`
+- `@oh-my-memories/mcp`
+- `@oh-my-memories/adapter-sdk`
+- `@oh-my-memories/adapter-claude-code`
+- `@oh-my-memories/adapter-cursor`
+- `@oh-my-memories/adapter-codex`
+- `@oh-my-memories/adapter-serena`
+
+Adapter packages are **not** `@oh-my-memories/adapters/<name>` — npm scopes don't nest. The `packages/adapters/<name>/` directory is just a filesystem grouping.
+
+## Don't
+
+- ❌ Don't import from `../../../other-package/src/`. Use the workspace dep.
+- ❌ Don't put adapter logic in `core/`. Adapters know about file formats; core does not.
+- ❌ Don't put a CLI command in `core/`. Core is library-only.
+- ❌ Don't add a new top-level `packages/<thing>/` without updating `AGENTS.md` AND this file.

@@ -1,0 +1,21 @@
+{
+  "name": "@oh-my-memories/mcp",
+  "version": "0.0.0",
+  "description": "MCP server for oh-my-memories (M1.1+)",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/server.ts",
+  "types": "./src/server.ts",
+  "files": ["src", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@oh-my-memories/adapter-sdk": "workspace:*",
+    "@oh-my-memories/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

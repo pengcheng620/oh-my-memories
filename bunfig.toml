@@ -1,0 +1,11 @@
+[install]
+auto = "auto"
+exact = true
+
+[install.cache]
+disable = false
+
+[test]
+preload = []
+coverage = true
+coverageThreshold = { line = 0.80, function = 0.80, statement = 0.80 }

@@ -1,0 +1,107 @@
+---
+description: How to write a new adapter (Cat A IDE / Cat B MCP / Cat C SaaS)
+globs: ["packages/adapters/**", "packages/adapter-sdk/**"]
+alwaysApply: false
+---
+
+# Adapter Design — the rules every adapter follows
+
+## The contract
+
+Every adapter implements a base interface from `@oh-my-memories/adapter-sdk`:
+
+```ts
+export interface IBaseAdapter {
+  readonly id: string;                       // e.g. "claude-code"
+  readonly category: 'ide' | 'mcp' | 'saas';
+  readonly displayName: string;              // e.g. "Claude Code"
+
+  detect(): Promise<DetectResult>;           // is this source present on the machine?
+  scan(opts: ScanOptions): AsyncIterable<MemoryRecord>;
+}
+```
+
+Then the category-specific extension:
+
+```ts
+export interface IIdeAdapter extends IBaseAdapter {
+  readonly category: 'ide';
+  storageRoot(): string;                     // resolved absolute path
+}
+
+export interface IMcpAdapter extends IBaseAdapter {
+  readonly category: 'mcp';
+  // Cat B = local MCP server with on-disk storage we can read directly
+  storageRoot(): string;
+}
+
+export interface ISaasAdapter extends IBaseAdapter {
+  readonly category: 'saas';
+  // Cat C = remote SaaS, requires API call, not just file reading
+  fetchRecords(query?: string): AsyncIterable<MemoryRecord>;
+}
+```
+
+## Canonical record shape
+
+Adapters MUST emit `MemoryRecord` (defined in `adapter-sdk`):
+
+```ts
+export interface MemoryRecord {
+  id: string;                          // adapter-stable, opaque
+  source: string;                      // adapter id ("claude-code")
+  sessionId?: string;                  // grouping key inside the source
+  timestamp: Date;                     // when this memory was written
+  role?: 'user' | 'assistant' | 'system' | 'tool';
+  text: string;                        // searchable content
+  metadata?: Record<string, unknown>;  // adapter-specific extras (don't rely on shape)
+}
+```
+
+**Adapter responsibilities**: read the source's native format → emit `MemoryRecord`s. Nothing else.
+**NOT adapter responsibilities**: indexing, ranking, deduplication, MCP, output formatting. Those live in `core` / `cli`.
+
+## Scan must be streaming
+
+```ts
+async *scan(opts: ScanOptions): AsyncIterable<MemoryRecord> {
+  for await (const file of walk(this.storageRoot())) {
+    if (this.isDenied(file)) continue;          // safety denylist
+    for await (const record of this.parseFile(file)) {
+      yield record;
+    }
+  }
+}
+```
+
+Memory sources can be 100MB+ (CC sessions). **Never load whole files into memory.** Stream JSONL line-by-line.
+
+## Required behaviors
+
+1. **Schema drift tolerance**: Cat A formats change between IDE versions. Read **only the common fields** (id, timestamp, role, text). Ignore unknown event types silently. Log nothing unless `--verbose`.
+
+2. **Corrupt-line tolerance**: a single malformed JSONL line MUST NOT abort the scan. Skip it, increment a `corruptLines` counter (returned in `ScanResult`).
+
+3. **Denylist**: before reading any file, check `packages/cli/src/safety/denylist.ts`. Files matching `*.pem`, `.env*`, `auth.json`, `*credentials*`, `*secret*` are skipped even if they're inside a memory source directory.
+
+4. **Read-only**: M1 adapters never write. Migration (M2) writes through a separate `IWritableAdapter` interface that explicitly opts in.
+
+5. **Cross-platform paths**: every adapter resolves its storage root via `packages/cli/src/platform/<adapter>.ts`. Never hardcode `~/.claude` — Windows is `%USERPROFILE%\.claude`.
+
+## Tests required
+
+For every new adapter, add to `tests/fixtures/<adapter-name>/`:
+- `valid.jsonl` (or equivalent) — 3+ records, happy path
+- `corrupt-line.jsonl` — one malformed line in the middle
+- `empty.jsonl` — empty file
+- `denylisted/` — a file that matches the denylist (should be skipped)
+
+And in `packages/adapters/<name>/tests/`:
+- `detect.test.ts` — detect() returns true/false correctly
+- `scan.test.ts` — emits expected records from `valid.jsonl`
+- `corrupt.test.ts` — handles `corrupt-line.jsonl` without throwing
+- `denylist.test.ts` — does NOT emit denylisted files
+
+## The 5th adapter test
+
+Before merging adapter #5+, diff your adapter's `scan()` shape with the existing 4. If it's structurally different, justify it in the PR description or refactor for parity. Drift now → maintenance hell later.

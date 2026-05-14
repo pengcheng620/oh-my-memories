@@ -1,0 +1,10 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Treat fixtures as data (no diff noise)
+tests/fixtures/** -text -diff
+
+# Lockfile is binary
+bun.lockb binary

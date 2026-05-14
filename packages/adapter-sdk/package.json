@@ -1,0 +1,17 @@
+{
+  "name": "@oh-my-memories/adapter-sdk",
+  "version": "0.0.0",
+  "description": "Public adapter interface for oh-my-memories. Implement these to add a new memory source.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": ["src", "docs", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "bun test"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "_comment": "Dogfood: when M1.1 ships, point this at omem mcp serve so editing oh-my-memories itself uses oh-my-memories. Today this is empty.",
+  "mcpServers": {}
+}
