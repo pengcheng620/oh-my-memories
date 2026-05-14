@@ -20,6 +20,7 @@ export class CursorAdapter implements IIdeAdapter {
     return { present: false, notes: 'not implemented (M1 in progress)' };
   }
 
+  // biome-ignore lint/correctness/useYield: M1 stub — Lane B replaces this with a streaming JSONL parser
   async *scan(_opts?: ScanOptions): AsyncIterable<MemoryRecord> {
     throw new Error('not implemented (M1 in progress)');
   }

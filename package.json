@@ -27,10 +27,7 @@
     "federation",
     "migration"
   ],
-  "workspaces": [
-    "packages/*",
-    "packages/adapters/*"
-  ],
+  "workspaces": ["packages/*", "packages/adapters/*"],
   "scripts": {
     "build": "bun run --filter '*' build",
     "test": "bun test",

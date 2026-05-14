@@ -15,13 +15,17 @@ export class SerenaAdapter implements IMcpAdapter {
   constructor(private readonly projectRoot: string) {}
 
   storageRoot(): string {
-    throw new Error('not implemented (M1 in progress)');
+    throw new Error(`not implemented (M1 in progress); projectRoot=${this.projectRoot}`);
   }
 
   async detect(): Promise<DetectResult> {
-    return { present: false, notes: 'not implemented (M1 in progress)' };
+    return {
+      present: false,
+      notes: `not implemented (M1 in progress); projectRoot=${this.projectRoot}`,
+    };
   }
 
+  // biome-ignore lint/correctness/useYield: M1 stub — Lane D replaces this with a markdown directory walker
   async *scan(_opts?: ScanOptions): AsyncIterable<MemoryRecord> {
     throw new Error('not implemented (M1 in progress)');
   }
