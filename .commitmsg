@@ -1,26 +1,45 @@
-feat(cli): add Tier 2 primitives (error catalog, duration parser, platform, output, denylist)
+feat(cli): wire dispatcher + Tier 2 command stubs + contract tests + docs/CLI.md rewrite
 
-Adds the foundation pieces from PLAN.md S2 / devex-verdict S15:
+Layered on top of the primitives commit (error catalog, duration, platform,
+output, denylist), this commit:
 
-  packages/cli/src/output/
-    error-catalog.ts   Single source of truth for OMEM-E*/W* codes (F3.4)
-    error.ts           OmemError POJO + factory (F3.1, JSON-stable wire shape)
-    json.ts            --json renderer: result + NDJSON warnings/errors
-    table.ts           text renderer: ASCII columns, NO_COLOR, ANSI dim hints
+  packages/cli/src/parse/global-flags.ts    Peel --json/--verbose/--non-interactive/--no-color/--help/--version off argv
+  packages/cli/src/commands/types.ts        CommandContext + CommandHandler shape
+  packages/cli/src/commands/help.ts         Per-subcommand --help text (F3.3)
+  packages/cli/src/commands/init.ts         Interactive default; OMEM-E21 in non-interactive (F2.6)
+  packages/cli/src/commands/scan.ts         --source, --since, --json arg parsing
+  packages/cli/src/commands/recall.ts       <query> + --all/--source/--limit/--since/--json; --source overrides --all with OMEM-W01 (D2)
+  packages/cli/src/commands/doctor.ts       --json contract surface
+  packages/cli/src/commands/config.ts       get/set/list grammar
+  packages/cli/src/commands/skills.ts       --ide=NAME / --ide NAME (F2.2); allowlist
+  packages/cli/src/index.ts                 Dispatcher rewire: route by command, fall through to subcommand --help on bad args
+  packages/cli/bin/omem                     Forward main()'s exit code to process.exit
+  docs/CLI.md                               Rewrite per devex-verdict S9 template: synopsis / description / options / json schema / examples / exit codes per command + global error catalog table
+  README.md                                 Replace fake "12 hits" line with a real --json snippet, point at docs/CLI.md
 
-  packages/cli/src/parse/
-    duration.ts        strict <n>{s,m,h,d,w,M,y} + ISO-8601 parser (F2.3)
+Tier 2 error contract is end-to-end: bad args, unknown command, invalid
+duration, missing --query all surface as OMEM-E* via the same renderer in
+both text and --json modes. Stubs return non-zero exit codes and the JSON
+contract surface so Lane E2 only swaps the body, never the wire shape.
 
-  packages/cli/src/platform/
-    home.ts            OMEM_HOME override (F6.3)
-    paths.ts           cross-OS config/index/log paths
-    interactive.ts     TTY + OMEM_NON_INTERACTIVE + NO_COLOR (F6.2, F6.4)
+  packages/cli/tests/parse/global-flags.test.ts        7 cases
+  packages/cli/tests/dispatcher.test.ts                25 cases
+  packages/cli/tests/contract/error-catalog.test.ts    9 cases   docs<->code drift gate (F3.4)
+  packages/cli/tests/contract/help.test.ts             10 cases  help/CLI.md drift gate (F4.2)
+  packages/cli/tests/contract/duration.test.ts         8 cases   every duration in CLI.md must parse
 
-  packages/cli/src/safety/
-    denylist.ts        spec.md S7.1: *.pem .env* auth.json *credentials*
-                       *secret* *.key token.json (non-user-configurable in M1)
+Verification gates
+  packages/cli            174 pass / 0 fail / 361 expects
+  full workspace          260 pass / 0 fail / 568 expects
+  bunx tsc --noEmit       clean
+  bunx biome check .      clean (96 files)
 
-Tests: 119 cases / 8 files / 248 assertions, all green.
-       tsc --noEmit clean, biome check clean.
+Manual end-to-end smoke (bun packages/cli/bin/omem):
+  --version              prints 0.0.0
+  nope                   OMEM-E02 + exit 2 + hint
+  recall                 OMEM-E01 + exit 2 (missing <query>)
+  recall x --since=tomorrow   OMEM-E20 + exit 2 + format hint
+  scan --json            { sources: [], stub: true } + NDJSON OMEM-E03 on stderr
 
-Dispatcher rewire + command stubs follow in the next commit.
+Lane E2 will replace the stub bodies with real adapter dispatch + federation;
+the wire contract here is what the contract tests now gate.
