@@ -17,12 +17,16 @@
     "packages/adapters/_shared": {
       "name": "@oh-my-memories/adapter-shared",
       "version": "0.0.0",
+      "dependencies": {
+        "@oh-my-memories/adapter-sdk": "workspace:*",
+      },
     },
     "packages/adapters/claude-code": {
       "name": "@oh-my-memories/adapter-claude-code",
       "version": "0.0.0",
       "dependencies": {
         "@oh-my-memories/adapter-sdk": "workspace:*",
+        "@oh-my-memories/adapter-shared": "workspace:*",
       },
     },
     "packages/adapters/codex": {
@@ -30,6 +34,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@oh-my-memories/adapter-sdk": "workspace:*",
+        "@oh-my-memories/adapter-shared": "workspace:*",
       },
     },
     "packages/adapters/cursor": {
@@ -37,6 +42,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@oh-my-memories/adapter-sdk": "workspace:*",
+        "@oh-my-memories/adapter-shared": "workspace:*",
       },
     },
     "packages/adapters/serena": {
