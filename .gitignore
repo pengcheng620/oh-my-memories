@@ -54,3 +54,6 @@ _scratch/
 .codex/
 .codex-prompt.txt
 .codex-output.txt
+
+# Git worktrees (one per lane — see docs/PLAN.md §1)
+.worktrees/
