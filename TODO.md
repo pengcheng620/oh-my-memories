@@ -6,9 +6,10 @@
 
 ## Now (in-progress)
 
-- [ ] **spec.md rewrite** — merge ceo-verdict + eng-verdict + product-formation + G-skill-vs-mcp into a single canonical M1 spec. _Owner: lup. Blocks: devex-review, M1 worktree._
-- [ ] **plan-devex-review** — gstack DevEx review of `omem` CLI surface (command names, flags, output, error messages, install flow). _Blocked by: spec.md rewrite._
-- [ ] **GitHub repo creation + first push** — `gh repo create` + push `dbae586`. _No blocker; just a button-press._
+- [x] **spec.md rewrite** — merged ceo-verdict + eng-verdict + product-formation + G-skill-vs-mcp into the canonical M1 spec. _Done @ 85da57d._
+- [x] **plan-devex-review** — gstack DevEx review of `omem` CLI surface produced `specs/devex-review-verdict.md` (4 locked decisions D1–D4, 8 pass scorecard, Lane E checklist). _Done._
+- [ ] **Lane E kickoff** — open `feat/m1-cli-wiring` worktree and execute the Lane E impact checklist in `specs/devex-review-verdict.md` §12.
+- [ ] **GitHub repo creation + first push** — `gh repo create` + push. _No blocker; just a button-press._
 
 ## Next (M1 — 5 parallel lanes)
 
@@ -46,3 +47,5 @@ When in doubt about "why is it this way", consult:
 | Architecture, 6 issues, parallelization | [`specs/eng-review-verdict.md`](./specs/eng-review-verdict.md) |
 | Naming, repo, monorepo, language, CLI surface | [`specs/product-formation.md`](./specs/product-formation.md) |
 | M1 = CLI + Skill, MCP → M1.1 | [`research/G-skill-vs-mcp.md`](./research/G-skill-vs-mcp.md) |
+| Canonical M1 spec (replaces all of the above for implementation reference) | [`specs/spec.md`](./specs/spec.md) |
+| CLI defaults, error contract, init UX, Lane E checklist | [`specs/devex-review-verdict.md`](./specs/devex-review-verdict.md) |
