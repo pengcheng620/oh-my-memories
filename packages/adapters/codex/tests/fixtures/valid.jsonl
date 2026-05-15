@@ -1,0 +1,11 @@
+{"timestamp":"2026-04-02T10:00:00.000Z","type":"session_meta","payload":{"id":"019d2900-0001-7000-aaaa-000000000001","cwd":"D:/Works/AI/llm-gateway","cli_version":"0.116.0"}}
+{"timestamp":"2026-04-02T10:00:01.000Z","type":"event_msg","payload":{"type":"task_started","turn_id":"019d2900-aaaa-7000-bbbb-000000000001"}}
+{"timestamp":"2026-04-02T10:00:02.000Z","type":"response_item","payload":{"type":"message","role":"developer","content":[{"type":"input_text","text":"<permissions instructions>system stuff"}]}}
+{"timestamp":"2026-04-02T10:00:03.000Z","type":"turn_context","payload":{"turn_id":"019d2900-aaaa-7000-bbbb-000000000001","model":"gpt-5.4"}}
+{"timestamp":"2026-04-02T10:00:04.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"first user turn"}]}}
+{"timestamp":"2026-04-02T10:00:05.000Z","type":"response_item","payload":{"type":"reasoning","content":[{"type":"reasoning_text","text":"thinking..."}]}}
+{"timestamp":"2026-04-02T10:00:06.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"hello! "},{"type":"output_text","text":"how can I help?"}]}}
+{"timestamp":"2026-04-02T10:00:07.000Z","type":"response_item","payload":{"type":"function_call","call_id":"abc","name":"shell","arguments":"{}"}}
+{"timestamp":"2026-04-02T10:00:08.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"please edit the project file"},{"type":"input_image","image_url":"data:image/png;base64,xxx"}]}}
+{"timestamp":"2026-04-02T10:00:09.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"I'll edit it now."}]}}
+{"timestamp":"2026-04-02T10:00:10.000Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"019d2900-aaaa-7000-bbbb-000000000001"}}
