@@ -155,6 +155,7 @@ bun run packages/cli/bin/omem -- recall --all "query"
 | Add docs that humans read | `docs/` |
 | Add docs that future-AI reads | This file (`AGENTS.md`) or a new `.cursor/rules/*.mdc` |
 | Capture a new design decision | `specs/<topic>-decision.md` (then link from this file) |
+| Add or change CI / GitHub automation | `.github/workflows/*.yml` (see `test.yml` for the cross-OS matrix that gates `docs/PLAN.md` §4.5) |
 
 ---
 

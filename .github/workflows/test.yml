@@ -1,0 +1,49 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs of this workflow on the same ref.
+# Saves CI minutes when force-pushing during PR iteration (which §4.5 expects).
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: bun test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # Cross-OS gate per docs/PLAN.md §4.5: a lane is NOT ready to merge until
+        # every job in this matrix is green. macOS catches case-sensitivity bugs;
+        # Windows catches backslash + CRLF issues; Linux is the reference platform.
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '>=1.1.0'
+
+      - name: Install dependencies
+        # NOTE: not using --frozen-lockfile because .gitignore currently excludes
+        # bun.lockb. M1.1 follow-up: commit the lockfile and tighten this step
+        # for reproducible cross-OS installs (see docs/PLAN.md §6 / M1.1).
+        run: bun install
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint (biome)
+        run: bunx biome check .
+
+      - name: Test
+        run: bun test
