@@ -11,16 +11,17 @@
 - [x] **Second-opinion review on D1–D4** — Cursor `code-reviewer` subagent (codex CLI was unreachable). Verdict PASS-WITH-NOTES, fixes applied, Lane E split into E1 + E2. _See `specs/devex-review-verdict.md` §15._
 - [x] **`docs/PLAN.md`** — six-lane plan with DoD, file ownership, dependencies, branch names, merge order, risk register. _Done._
 - [x] **Lane A complete** — squash-merged as [`b154988`](https://github.com/pengcheng620/oh-my-memories/commit/b154988) via PR [#1](https://github.com/pengcheng620/oh-my-memories/pull/1). All 7 CI checks green across Ubuntu/macOS/Windows. Worktree + branch cleaned up. The `claude-code` adapter is now the reference shape for Lanes B/C/D.
-- [ ] **Implement Lane B** — `cursor` adapter. Worktree `.worktrees/lane-b/`, branch `feat/m1-cursor-adapter`. Baseline green (15/15, tsc 0, biome 0).
-- [ ] **Implement Lane C** — `codex` adapter. Worktree `.worktrees/lane-c/`, branch `feat/m1-codex-adapter`. Baseline green (15/15, tsc 0, biome 0).
-- [ ] **Implement Lane D** — `serena` adapter. Worktree `.worktrees/lane-d/`, branch `feat/m1-serena-adapter`. Baseline green (15/15, tsc 0, biome 0).
+- [x] **Lane B complete** — squash-merged as [`957f582`](https://github.com/pengcheng620/oh-my-memories/commit/957f582) via PR [#2](https://github.com/pengcheng620/oh-my-memories/pull/2). All 7 CI checks green. Worktree + branch cleaned up.
+- [ ] **Implement Lane C** — `codex` adapter. Worktree `.worktrees/lane-c/`, branch `feat/m1-codex-adapter`. Branched off Lane A (`b154988`); needs rebase onto current main (`957f582`) before implementation.
+- [ ] **Implement Lane D** — `serena` adapter. Worktree `.worktrees/lane-d/`, branch `feat/m1-serena-adapter`. Branched off Lane A (`b154988`); needs rebase onto current main (`957f582`) before implementation. Smaller scope than C (Markdown + frontmatter, not JSONL).
+- [ ] **Post-B follow-up — `_shared` rewire (deferred)** — `claude-code/parser.ts` and `cursor/parser.ts` now share ~80 lines (`extractText`, `isMemoryRole`, `createReadStream + readline` skeleton). Per `PLAN.md` §3 cross-lane rule 1, the rewire belongs in a dedicated PR cut by Lane E1's owner — not inside C or D. C and D follow the same per-adapter-parser pattern for consistency until E1 lands and that owner rip-and-replaces the shared core.
 
 ## Next (M1 — 5 parallel lanes)
 
 > Open one branch per lane. See [`docs/PLAN.md`](./docs/PLAN.md) § M1 Lanes for branch names, deps, DoD.
 
 - [x] **Lane A** — `packages/adapters/claude-code` _Merged @ b154988._
-- [ ] **Lane B** — `packages/adapters/cursor` (in flight, `.worktrees/lane-b/`)
+- [x] **Lane B** — `packages/adapters/cursor` _Merged @ 957f582._
 - [ ] **Lane C** — `packages/adapters/codex` (in flight, `.worktrees/lane-c/`)
 - [ ] **Lane D** — `packages/adapters/serena` (in flight, `.worktrees/lane-d/`)
 - [ ] **Lane E1** — CLI shell + Tier 2 error contract: dispatcher, `output/error.ts` + `error-catalog.ts`, `output/{table,json}.ts`, `parse/duration.ts`, `OMEM_HOME` + `NO_COLOR` + `OMEM_NON_INTERACTIVE` env wiring, `tests/contract/{help,error-catalog,duration}.test.ts`. Uses fixture data, no real adapter calls. _Branch: `feat/m1-cli-shell`._
