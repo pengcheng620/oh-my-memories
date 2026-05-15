@@ -17,9 +17,9 @@
 - [x] **Lane S — `_shared` rewire complete** — squash-merged as [`6fc77de`](https://github.com/pengcheng620/oh-my-memories/commit/6fc77de) via PR [#5](https://github.com/pengcheng620/oh-my-memories/pull/5). All 7 CI checks green across Ubuntu/macOS/Windows. Introduces `@oh-my-memories/adapter-shared` (`streamJsonl`, `extractTextBlocks`, `isMemoryRole`, `createParseStats` / `ParseStats`) per `specs/spec.md` §7.2, and rewires CC/Cursor/Codex parsers onto it (-71 net lines across 3 parser.ts files; Serena untouched — it's Markdown). 86 tests / 0 fail (was 69; +17 from the new package). Lane E1 is now fully unblocked.
 - [x] **Lane E1 complete** — squash-merged as [`9d2c647`](https://github.com/pengcheng620/oh-my-memories/commit/9d2c647) via PR [#6](https://github.com/pengcheng620/oh-my-memories/pull/6). All 7 CI checks green across Ubuntu/macOS/Windows. CLI shell with Tier 2 error contract, 36 files (+2589/-108), 260 tests. Dispatcher, subcommand stubs (returning wire-shape responses), error-catalog, JSON/table output, duration parser, global flags, denylist safety, platform env detection, contract tests (help ↔ CLI.md, error-catalog, duration). Lane E2 is now fully unblocked.
 
-## Next (M1 — final lane)
+## M1 — COMPLETE
 
-> See [`docs/PLAN.md`](./docs/PLAN.md) § M1 Lanes for branch names, deps, DoD.
+> All 7 lanes merged. See [`docs/PLAN.md`](./docs/PLAN.md) § M1 Lanes for details.
 
 - [x] **Lane A** — `packages/adapters/claude-code` _Merged @ b154988._
 - [x] **Lane B** — `packages/adapters/cursor` _Merged @ 957f582._
@@ -27,7 +27,7 @@
 - [x] **Lane D** — `packages/adapters/serena` _Merged @ 804cb3b._
 - [x] **Lane S** — `@oh-my-memories/adapter-shared` _Merged @ 6fc77de._
 - [x] **Lane E1** — CLI shell + Tier 2 error contract _Merged @ 9d2c647._
-- [ ] **Lane E2** — federation + commands + skills install: wires E1 into real adapters via `commands/{init,scan,recall,doctor,config}`, `core/{inventory,federation}`, `safety/denylist`, `skills install`, `tests/e2e/*`. Depends on E1 + ≥1 of A–D (all met). _Branch: `feat/m1-cli-wiring`._
+- [x] **Lane E2** — federation + commands + skills install _Merged @ 3f27f00 via PR [#7](https://github.com/pengcheng620/oh-my-memories/pull/7)._ All 7 CI checks green. 294 tests / 0 fail / 731 assertions.
 
 ## After M1 (in priority order)
 
