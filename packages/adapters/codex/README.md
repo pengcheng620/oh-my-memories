@@ -100,6 +100,15 @@ console.log('stats:', adapter.lastScanStats);
 Fixtures in `tests/fixtures/` are real-shaped (modeled after a working
 codex install with PII scrubbed) per PLAN.md §3 cross-cutting rule 3.
 
+## Shared primitives
+
+The streaming primitive lives in
+[`@oh-my-memories/adapter-shared`](../_shared/) (`streamJsonl`) so the
+corrupt-line tolerance contract is implemented in exactly one place across
+all three Cat A adapters. The text-block extractor
+(`extractTextBlocks(content, {'input_text','output_text'})`) and role guard
+(`isMemoryRole`) come from the same package.
+
 ## Spec references
 
 - `specs/spec.md` §3.1 — Cat A adapter contract

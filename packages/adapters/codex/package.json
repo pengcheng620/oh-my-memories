@@ -8,6 +8,9 @@
   "types": "./src/index.ts",
   "files": ["src", "README.md"],
   "scripts": { "build": "tsc -p tsconfig.json", "test": "bun test" },
-  "dependencies": { "@oh-my-memories/adapter-sdk": "workspace:*" },
+  "dependencies": {
+    "@oh-my-memories/adapter-sdk": "workspace:*",
+    "@oh-my-memories/adapter-shared": "workspace:*"
+  },
   "publishConfig": { "access": "public" }
 }

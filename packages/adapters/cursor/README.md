@@ -108,6 +108,12 @@ Malformed JSON lines (truncated writes, partial flushes) are counted in
 `lastScanStats.corruptLines` and skipped without aborting the scan. Tests
 in `tests/corrupt.test.ts` lock this behavior.
 
+The streaming primitive lives in
+[`@oh-my-memories/adapter-shared`](../_shared/) (`streamJsonl`) so the
+corrupt-line tolerance contract is implemented in exactly one place across
+all three Cat A adapters. The text-block extractor (`extractTextBlocks`)
+and role guard (`isMemoryRole`) come from the same package.
+
 ## Test fixtures
 
 Three real-shaped fixtures live under `tests/fixtures/`:
