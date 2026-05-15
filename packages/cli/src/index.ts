@@ -2,6 +2,7 @@ import { config } from './commands/config';
 import { doctor } from './commands/doctor';
 import { helpFor } from './commands/help';
 import { init } from './commands/init';
+import { mcp } from './commands/mcp';
 import { recall } from './commands/recall';
 import { scan } from './commands/scan';
 import { skills } from './commands/skills';
@@ -32,11 +33,12 @@ const COMMANDS: Readonly<Record<string, CommandHandler>> = {
   doctor,
   config,
   skills,
+  mcp,
 };
 
 const M2_COMMANDS: ReadonlySet<string> = new Set(['migrate', 'export', 'import', 'remember']);
 
-const M1_1_COMMANDS: ReadonlySet<string> = new Set(['mcp', 'upgrade']);
+const M1_1_COMMANDS: ReadonlySet<string> = new Set(['upgrade']);
 
 export interface MainOptions {
   /** Defaults to process.stdout / .stderr / .env / process.stdin.isTTY. */

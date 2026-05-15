@@ -43,20 +43,22 @@ Ship M1 as a usable binary before wrapping it in MCP.
 | Tag a release (`v0.1.0-alpha.1`) and trigger the workflow | 🔲 (manual) |
 | Verify `npx oh-my-memories recall "<q>"` from a fresh machine | 🔲 (post-publish) |
 
-## M1.1 — MCP server (~1 week after distribution)
+## M1.1 — MCP server -- COMPLETE
 
 Per `research/G-skill-vs-mcp.md`: deferred from M1 until CLI I/O contract was frozen. Contract is now frozen.
 
 | Component | Status |
 |----|----|
-| Add `@modelcontextprotocol/sdk` to `packages/mcp/` | 🔲 |
-| `packages/mcp/server.ts` (stdio transport) | 🔲 |
-| MCP tool: `recall_across_sources` (wraps `core/federation.recall()`) | 🔲 |
-| MCP tool: `scan_sources` (wraps `core/inventory`) | 🔲 |
-| `omem mcp serve` CLI command | 🔲 |
-| `omem mcp install --ide=<ide>` (writes config for Cursor / Codex / Gemini) | 🔲 |
-| Per-IDE config writers (`.cursor/mcp.json`, `~/.codex/config.toml`, `~/.gemini/settings.json`) | 🔲 |
-| Tests: MCP tool invocation + JSON schema validation | 🔲 |
+| Add `@modelcontextprotocol/sdk` to `packages/mcp/` | ✅ done (`^1.29.0`) |
+| `packages/mcp/src/server.ts` (stdio transport) | ✅ done |
+| MCP tool: `omem_recall` (wraps `core/federation.recall()`) | ✅ done — namespaced over the spec's `recall_across_sources` for tool-palette clarity |
+| MCP tool: `omem_scan` (wraps `core/inventory`) | ✅ done |
+| `omem mcp serve` CLI command | ✅ done |
+| `omem mcp install --ide=<ide>` (claude-code, cursor, codex) | ✅ done — idempotent merge-only writes |
+| Per-IDE config writers (`~/.claude.json`, `~/.cursor/mcp.json`, `~/.codex/config.toml`) | ✅ done |
+| `omem mcp uninstall --ide=<ide>` (reverse the above) | ✅ done |
+| Tests: tool execution + installer round-trip + in-memory MCP transport contract | ✅ done — 27 new tests, 323 total passing |
+| Gemini settings.json writer | 🔲 deferred — added when Gemini CLI is in scope |
 
 ## M2 — Migration + Backup + Self-update
 

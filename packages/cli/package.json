@@ -48,12 +48,13 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@oh-my-memories/adapter-sdk": "workspace:*",
-    "@oh-my-memories/core": "workspace:*",
     "@oh-my-memories/adapter-claude-code": "workspace:*",
-    "@oh-my-memories/adapter-cursor": "workspace:*",
     "@oh-my-memories/adapter-codex": "workspace:*",
-    "@oh-my-memories/adapter-serena": "workspace:*"
+    "@oh-my-memories/adapter-cursor": "workspace:*",
+    "@oh-my-memories/adapter-sdk": "workspace:*",
+    "@oh-my-memories/adapter-serena": "workspace:*",
+    "@oh-my-memories/core": "workspace:*",
+    "@oh-my-memories/mcp": "workspace:*"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **M1.1 MCP server**: `omem mcp serve` boots an MCP stdio server exposing two read-only tools — `omem_recall` (federated search) and `omem_scan` (source inventory) — backed by the same federation/inventory paths as the CLI.
+- **M1.1 IDE wiring**: `omem mcp install --ide=<claude-code|cursor|codex>` registers the `oh-my-memories` MCP server in each IDE's config (`~/.claude.json`, `~/.cursor/mcp.json`, `~/.codex/config.toml`), idempotent and surgical (other servers in the file are preserved). `omem mcp uninstall` reverses it.
+- `@modelcontextprotocol/sdk@^1.29.0` and `zod@4` as runtime dependencies of `@oh-my-memories/mcp`.
+- New tests: 20 in `packages/mcp/tests/{tools,installer,server}.test.ts` (incl. an in-memory MCP transport contract test) and 7 in `packages/cli/tests/mcp-cmd.test.ts`.
+
+### Changed
+- CLI dispatcher: `mcp` is now a real subcommand (was previously listed as M1.1+ unknown). The `M1_1_COMMANDS` "not yet implemented" gate now only covers `upgrade`.
+
 ## [0.1.0-alpha.1] - 2026-05-15
 
 ### Added

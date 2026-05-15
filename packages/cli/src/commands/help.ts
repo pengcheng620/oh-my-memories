@@ -134,6 +134,29 @@ OPTIONS
                   Both --ide=NAME and --ide NAME are accepted (F2.2).
 `;
 
+const MCP_HELP = `omem mcp - run as MCP server, or wire into an IDE
+
+USAGE
+  omem mcp serve
+  omem mcp install --ide=<ide>
+  omem mcp uninstall --ide=<ide>
+
+DESCRIPTION
+  'serve' starts the MCP server over stdio and exposes two tools:
+    omem_recall  Federated search across detected sources (read-only)
+    omem_scan    List detected memory sources with health info (read-only)
+
+  'install' writes the omem stanza to your IDE's MCP config so the IDE will
+  spawn 'omem mcp serve' on demand. Idempotent — re-running is safe.
+
+OPTIONS
+  --ide=<ide>     One of: claude-code | cursor | codex (case-insensitive)
+
+EXAMPLES
+  omem mcp install --ide=cursor
+  omem mcp serve
+`;
+
 export const HELP_TEXT: Readonly<Record<string, string>> = {
   __global__: GLOBAL_HELP,
   init: INIT_HELP,
@@ -142,6 +165,7 @@ export const HELP_TEXT: Readonly<Record<string, string>> = {
   doctor: DOCTOR_HELP,
   config: CONFIG_HELP,
   skills: SKILLS_HELP,
+  mcp: MCP_HELP,
 };
 
 /**

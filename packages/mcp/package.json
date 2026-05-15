@@ -1,19 +1,25 @@
 {
   "name": "@oh-my-memories/mcp",
-  "version": "0.0.0",
-  "description": "MCP server for oh-my-memories (M1.1+)",
+  "version": "0.1.0-alpha.1",
+  "description": "MCP server for oh-my-memories — wraps federated recall + scan as MCP tools",
   "license": "MIT",
   "type": "module",
-  "main": "./src/server.ts",
-  "types": "./src/server.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "files": ["src", "README.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "bun test"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@oh-my-memories/adapter-claude-code": "workspace:*",
+    "@oh-my-memories/adapter-codex": "workspace:*",
+    "@oh-my-memories/adapter-cursor": "workspace:*",
     "@oh-my-memories/adapter-sdk": "workspace:*",
-    "@oh-my-memories/core": "workspace:*"
+    "@oh-my-memories/adapter-serena": "workspace:*",
+    "@oh-my-memories/core": "workspace:*",
+    "zod": "4.4.3"
   },
   "publishConfig": {
     "access": "public"

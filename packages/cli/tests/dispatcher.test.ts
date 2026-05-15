@@ -90,12 +90,17 @@ describe('dispatcher — unknown commands', () => {
     }
   });
 
-  test('mentions M1.1+ for mcp / upgrade', async () => {
-    for (const cmd of ['mcp', 'upgrade']) {
-      const { streams, options } = opts();
-      await main([cmd], options);
-      expect(streams.stderr.text()).toContain('M1.1+');
-    }
+  test('mentions M1.1+ for upgrade (mcp is now implemented)', async () => {
+    const { streams, options } = opts();
+    await main(['upgrade'], options);
+    expect(streams.stderr.text()).toContain('M1.1+');
+  });
+
+  test('omem mcp (bare) returns usage error, not unknown-command', async () => {
+    const { streams, options } = opts();
+    const code = await main(['mcp'], options);
+    expect(code).toBe(2);
+    expect(streams.stderr.text()).toContain('OMEM-E01-USAGE');
   });
 
   test('--json mode emits NDJSON error on stderr', async () => {

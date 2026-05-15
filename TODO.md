@@ -32,7 +32,7 @@
 ## Next (in priority order)
 
 - [x] **M0.5** — Distribution: package renamed to `oh-my-memories`, node-bundled CLI + Bun-compiled binaries, release.yml workflow, VERSION → `0.1.0-alpha.1`. Tag/publish is a manual one-liner (`git tag v0.1.0-alpha.1 && git push --tags`).
-- [ ] **M1.1** — MCP server (`packages/mcp/`) + `omem mcp serve` + `omem mcp install --ide=<ide>`. Wraps `core/federation.recall()` as MCP tools. ~1 week.
+- [x] **M1.1** — MCP server (`packages/mcp/`) + `omem mcp serve` + `omem mcp install --ide=<ide>`. `omem_recall` and `omem_scan` MCP tools wrap `core/federation.recall()` and `core/inventory`. Per-IDE config writers for claude-code/cursor/codex (idempotent merge into `~/.claude.json`, `~/.cursor/mcp.json`, `~/.codex/config.toml`). 27 new tests, 323 total / 0 fail.
 - [ ] **M2.A** — Migration (`omem migrate --from --to --dry-run --apply`) + `IWritableAdapter` interface (mini-spec at `specs/iwritable-adapter-mini-spec.md`)
 - [ ] **M2.B** — Backup (`omem export --all` / `omem import <archive>`)
 - [ ] **M2.C** — Self-update (`omem upgrade`)
@@ -42,10 +42,10 @@
 
 ## Blockers / risks
 
-- **M0.5 blocks M1.1**: MCP `omem mcp install` needs the binary/npm package to exist first.
-- **Watching**: MCP SDK changes in Anthropic's Q3 release cycle (could affect M1.1 work plan).
+- **Watching**: MCP SDK changes — we pinned `@modelcontextprotocol/sdk@^1.29.0`. Anthropic's pre-alpha v2 line is incompatible; do not auto-bump.
 - **Watching**: Codex / Cursor on-disk format changes (we tolerate schema drift, but adapter tests need keeping current).
-- **M2.A design gap**: `IWritableAdapter` interface not yet defined. Needs a mini-spec before implementation.
+- **M2.A design done**: `specs/iwritable-adapter-mini-spec.md` produced by subagent (delivered with M0.5). Implementation can start.
+- **M3 design done**: `specs/m3-canonical-store-spec.md` produced by subagent (delivered with M0.5). SQLite + FTS5 + RRF + bun:sqlite/better-sqlite3 dual driver.
 
 ## Decisions log (where to find rationale)
 
