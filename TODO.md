@@ -10,7 +10,8 @@
 - [x] **plan-devex-review** — gstack DevEx review of `omem` CLI surface produced `specs/devex-review-verdict.md` (4 locked decisions D1–D4, 8 pass scorecard, Lane E checklist). _Done._
 - [x] **Second-opinion review on D1–D4** — Cursor `code-reviewer` subagent (codex CLI was unreachable). Verdict PASS-WITH-NOTES, fixes applied, Lane E split into E1 + E2. _See `specs/devex-review-verdict.md` §15._
 - [x] **`docs/PLAN.md`** — six-lane plan with DoD, file ownership, dependencies, branch names, merge order, risk register. _Done._
-- [ ] **Open lane worktrees** — open A first (blocker), then B/C/D/E1 in parallel, E2 last. See `docs/PLAN.md` §1 + §4. _Use the `using-git-worktrees` skill for safe worktree creation._
+- [x] **Open Lane A worktree** — `.worktrees/lane-a/` on branch `feat/m1-claude-code-adapter`. Baseline green (biome 36/0, tsc 0, bun test 1/1, 100% cov). _Done @ 704610d (gitignore commit; worktree itself is local-only)._
+- [ ] **Implement Lane A** — first Cat A adapter (`packages/adapters/claude-code`). Full impl + 4 tests + fixtures per `docs/PLAN.md` §2. Active worktree: `.worktrees/lane-a/`. Lanes B/C/D/E1 stay un-opened until A merges (lazy-open avoids 5× idle baselines).
 
 ## Next (M1 — 5 parallel lanes)
 
