@@ -1,0 +1,3 @@
+{"role":"user","message":{"content":[{"type":"text","text":"first valid turn"}]}}
+{not valid json — partial flush from a crash}
+{"role":"assistant","message":{"content":[{"type":"text","text":"third valid turn (after the corrupt line)"}]}}
