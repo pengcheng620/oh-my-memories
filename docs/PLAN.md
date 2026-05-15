@@ -214,7 +214,7 @@ tests/e2e/                    (NEW — real adapter invocations, no mocks)
 These apply to every lane. Violating them produces merge conflicts.
 
 1. **One lane = one disjoint set of files.** Cross-lane edits require a separate "shared rewire" PR cut by a designated owner (default: Lane E1's owner). If you find yourself wanting to edit `packages/adapter-sdk` from inside Lane B, stop and file an issue.
-2. **Tests live with code.** Adapter tests in `packages/adapters/<name>/test/`. CLI contract tests in `tests/contract/`. E2E in `tests/e2e/`. No tests in `tests/<root>` outside those three.
+2. **Tests live with code.** Adapter tests in `packages/adapters/<name>/tests/` (plural — matches `tsconfig.json` include glob and `docs/ADAPTER-SDK.md`). CLI contract tests in `tests/contract/`. E2E in `tests/e2e/`. No tests in `tests/<root>` outside those three.
 3. **Fixtures are real-shaped, not synthetic.** Capture from a working install, scrub PII (replace usernames with `lup`, redact API keys with `xxx`), commit. Synthetic fixtures hide schema drift bugs that this product is built to expose.
 4. **Every failure path is a numbered error code.** No `throw new Error("foo")` outside `error-catalog.ts` (Lane E1's lint rule enforces this; A–D should adopt the convention from day one).
 5. **Default to `--dry-run` for any future write paths.** M1 is read-only, but Lane E2 sets the precedent — if M2's `migrate` command later defaults to apply, that's a regression on this rule.
@@ -233,6 +233,67 @@ Strict order until A merges; flexible afterward.
 4. **E2** lands last in M1. It needs E1's CLI shell + error contract AND at least one adapter to wire against. Ideally E2 lands after at least 2 adapters (A + B or A + C) so the headline scenario works end-to-end across two real sources, not one.
 
 After E2 merges, M1 is shipped: tag `v0.1.0-alpha.1`, push to origin, run `npm publish --tag alpha`, smoke-test on a fresh Windows + macOS VM.
+
+### 4.5. When a worktree is ready to merge (per-lane gate)
+
+The cross-lane order above tells you _which_ lane goes next. This section tells you _when_ a single lane's worktree branch is actually ready to merge into `main`. Both gates must clear.
+
+**Hard prerequisites — all must be true:**
+
+1. **Every DoD checkbox in §2 is ticked**, including the cross-OS one (`bun test` green on both Windows and macOS). One-OS-only is not done.
+2. **`bun run typecheck` clean.** Zero TypeScript errors, including under `noUncheckedIndexedAccess`.
+3. **`bunx biome check .` clean.** Line endings LF (per `biome.json`), imports sorted, no unused vars, no `any`. Auto-fixable issues already auto-fixed.
+4. **README.md exists in the package directory** with the schema-version note (e.g. `claude-code/2026-05`) and a pointer to the relevant `specs/spec.md` section.
+5. **Branch is rebased on latest `main`.** No merge commits in the feature-branch history (rule 6 in §3).
+6. **PR description references the spec section(s) and the failure-modes table** in the relevant verdict file (per Lane A DoD: `specs/spec.md` §3.1 + §7.2 plus eng-verdict).
+7. **No TODOs introduced into production code** that aren't filed as issues. `// TODO(M1.1): ...` is fine; bare `// TODO` is not.
+
+**Soft signals — at least one must be true (avoid merging blind):**
+
+- A second pair of eyes (human reviewer, Codex CLI review, or Cursor `code-reviewer` subagent) has signed off, OR
+- The lane owner has slept on it ≥1 night and re-ran `bun test` cold the next morning, OR
+- The lane has been used end-to-end at least once (for adapter lanes: scan a real source on the developer's machine; for CLI lanes: invoke the command end-to-end against a fixture).
+
+**Anti-signals — DO NOT merge if any are true:**
+
+- Tests are green only because they're skipped (`it.skip`, `describe.skip`, `--bail`).
+- Coverage is below 80% on the package being added (per `bunfig.toml` policy).
+- The diff bundles a "small, unrelated drive-by fix" in another package. Cut a separate PR.
+- Cross-lane file ownership is violated (e.g., Lane B touched `packages/adapter-sdk/`). Rip the cross-cut into a "shared rewire" PR per rule 1 in §3.
+- The worktree was branched off a stale `main` and has not been rebased since (history will diverge, increases conflict risk for sibling lanes).
+
+**Mechanical merge flow (after gates clear):**
+
+```text
+# 1. From the worktree:
+cd .worktrees/<lane>
+git fetch origin
+git rebase origin/main           # resolve any conflicts here, locally
+bun test && bun run typecheck && bunx biome check .   # green after rebase
+git push --force-with-lease
+
+# 2. Open the PR (URL was printed at first push):
+#    https://github.com/pengcheng620/oh-my-memories/pull/new/feat/m1-claude-code-adapter
+#    Reference spec sections + verdict tables in the description.
+
+# 3. After approval + CI green: squash-merge from the GitHub UI
+#    (preferred over rebase-merge — keeps main's first-parent history clean,
+#     and the per-commit detail lives in the PR conversation thread).
+
+# 4. From the main worktree (NOT the lane worktree — it's about to vanish):
+cd D:/Works/AI/Skills/oh-my-memories
+git switch main
+git pull origin main
+git push origin --delete feat/m1-<lane>      # clean up remote branch
+git worktree remove .worktrees/<lane>        # removes dir + prunes worktree list
+git branch -D feat/m1-<lane>                 # remove local branch ref
+
+# 5. Open the next lane (per §1 dependency graph):
+#    Use the using-git-worktrees skill: it now finds .worktrees/ already exists
+#    and skips the location question.
+```
+
+**A note on what "merge" actually means here:** there is no separate "integration branch" — `main` IS the integration branch. The lane PR squash-merges directly into `main`. After Lane A merges, the PLAN.md gate in §4 says B/C/D/E1 _can_ start; they don't auto-start. Each one's worktree is opened lazily when its owner is ready, branched off the now-updated `main`. This avoids the "five idle worktrees with stale baselines" trap that motivated the lazy-open scope decision earlier.
 
 ---
 
