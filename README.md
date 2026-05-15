@@ -18,11 +18,19 @@ Multiply by 7 tools. Multiply by 6 months. You have a memory archipelago no agen
 
 ```bash
 $ npm install -g oh-my-memories
-$ omem init                           # detects all your memory sources
-$ omem scan                           # lists what we found
-$ omem recall --all "JWT refresh flow"
-# → 12 hits across CC sessions, 3 from Cursor, 1 from Serena
+$ omem init                           # detects every memory source on this machine
+$ omem scan --json | jq '.sources[].name'
+"claude-code"
+"cursor"
+"codex"
+"serena"
+$ omem recall "JWT refresh flow" --json | jq '.hits | length'
+16
 ```
+
+(M1 ships the federation; the JSON contract above is what agents wire against.
+The exact response shape lives in [`docs/CLI.md`](./docs/CLI.md), gated by a
+contract test so it never drifts from `--help`.)
 
 Then: `omem skills install --ide=cursor` writes a `SKILL.md` that teaches Cursor's agent "when the user asks to recall something, run `omem recall --all`." Now Cursor's agent finds your CC memory, automatically.
 

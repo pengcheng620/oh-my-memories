@@ -1,2 +1,5 @@
 #!/usr/bin/env bun
-import('../src/index.ts').then((m) => m.main(process.argv.slice(2)));
+import('../src/index.ts').then(async (m) => {
+  const code = await m.main(process.argv.slice(2));
+  process.exit(typeof code === 'number' ? code : 0);
+});

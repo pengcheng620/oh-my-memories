@@ -57,3 +57,7 @@ _scratch/
 
 # Git worktrees (one per lane — see docs/PLAN.md §1)
 .worktrees/
+
+# Heredoc workaround for PowerShell git commits
+.commitmsg
+.prbody
