@@ -2,9 +2,14 @@
   "name": "@oh-my-memories/adapter-shared",
   "version": "0.0.0",
   "private": true,
-  "description": "Internal shared utilities for built-in adapters",
+  "description": "Internal shared utilities for built-in adapters (JSONL streaming, content-block extraction, role guards)",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "files": ["src", "README.md"],
+  "scripts": { "build": "tsc -p tsconfig.json", "test": "bun test" },
+  "dependencies": {
+    "@oh-my-memories/adapter-sdk": "workspace:*"
+  }
 }
