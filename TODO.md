@@ -1,15 +1,16 @@
 # TODO
 
 > Quick board — current in-progress, next-up, and blockers.
-> For the full plan with DoD, dependencies, and lanes see [`docs/PLAN.md`](./docs/PLAN.md).
+> For the full plan with DoD per lane, dependencies, branch names, and merge order see [`docs/PLAN.md`](./docs/PLAN.md).
 > For milestones overview see [`docs/ROADMAP.md`](./docs/ROADMAP.md).
 
 ## Now (in-progress)
 
 - [x] **spec.md rewrite** — merged ceo-verdict + eng-verdict + product-formation + G-skill-vs-mcp into the canonical M1 spec. _Done @ 85da57d._
 - [x] **plan-devex-review** — gstack DevEx review of `omem` CLI surface produced `specs/devex-review-verdict.md` (4 locked decisions D1–D4, 8 pass scorecard, Lane E checklist). _Done._
-- [ ] **Lane E kickoff** — open `feat/m1-cli-wiring` worktree and execute the Lane E impact checklist in `specs/devex-review-verdict.md` §12.
-- [ ] **GitHub repo creation + first push** — `gh repo create` + push. _No blocker; just a button-press._
+- [x] **Second-opinion review on D1–D4** — Cursor `code-reviewer` subagent (codex CLI was unreachable). Verdict PASS-WITH-NOTES, fixes applied, Lane E split into E1 + E2. _See `specs/devex-review-verdict.md` §15._
+- [x] **`docs/PLAN.md`** — six-lane plan with DoD, file ownership, dependencies, branch names, merge order, risk register. _Done._
+- [ ] **Open lane worktrees** — open A first (blocker), then B/C/D/E1 in parallel, E2 last. See `docs/PLAN.md` §1 + §4. _Use the `using-git-worktrees` skill for safe worktree creation._
 
 ## Next (M1 — 5 parallel lanes)
 

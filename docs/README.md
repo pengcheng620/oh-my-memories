@@ -10,6 +10,7 @@ Human-readable docs. AI agents should start at [`AGENTS.md`](../AGENTS.md), not 
 | [`MIGRATION.md`](./MIGRATION.md) | End users | How to move memories between AI tools |
 | [`ADAPTER-SDK.md`](./ADAPTER-SDK.md) | 3rd-party adapter authors | How to write a new adapter (M4 stable) |
 | [`CLI.md`](./CLI.md) | End users + agents | Every `omem` command, every flag, every exit code |
+| [`PLAN.md`](./PLAN.md) | M1 lane owners | How to land M1 in 6 parallel lanes (A, B, C, D, E1, E2) — DoD, dependencies, branch names, merge order |
 
 Decisions and verdicts live in [`../specs/`](../specs/), not here.
 Research that informed those decisions lives in [`../research/`](../research/).
