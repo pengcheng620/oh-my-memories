@@ -73,12 +73,12 @@ packages/adapters/claude-code/
 
 **DoD checklist:**
 
-- [ ] Implements `IBaseAdapter` from `@oh-my-memories/adapter-sdk` end-to-end (`init`, `scan`, `iterate`)
+- [ ] Implements `IIdeAdapter` from `@oh-my-memories/adapter-sdk` (extends `IBaseAdapter` per spec.md §2 inheritance rule). Surface: `id`, `category: 'ide'`, `displayName`, `storageRoot()`, `detect()`, `scan(opts?)`. Federation only sees `IBaseAdapter`.
 - [ ] Iterates transcripts via `packages/adapters/_shared/src/jsonl.ts` (NOT a local re-implementation — that file ships in Lane E1, so initially block on that, OR temporarily implement locally and rip out in a follow-up PR)
-- [ ] `corrupt.test.ts` proves a malformed line in a fixture does NOT crash; `corruptLineCount` increments
+- [ ] `corrupt.test.ts` proves a malformed line in a fixture does NOT crash; the adapter emits `CorruptRecordError` (or increments a counter exposed via a side channel) without aborting the iterator
 - [ ] Honours `denylist` from `packages/cli/safety/denylist.ts` (skips `*.pem`, `.env*`, etc. — see spec §7.1). If `safety/` not yet shipped (Lane E1 owns), stub a const list locally and migrate when E1 merges
 - [ ] Coverage ≥ 80% on adapter logic (per `bunfig.toml`)
-- [ ] All 4 tests green on Windows + macOS (CI matrix)
+- [ ] All 4 tests green on Windows + macOS (CI matrix). Tests: `adapter.test.ts` (id/category/displayName/detect), `parser.test.ts` (scan yields valid records), `corrupt.test.ts` (corrupt-line tolerance), `paths.test.ts` (storageRoot cross-platform)
 - [ ] `README.md` contains schema-version note (`claude-code/2026-05`) and points at the spec's §3 Cat A bullet
 - [ ] PR description references `specs/spec.md` §3.1 + §7.2 and links the eng-verdict failure-modes table
 
