@@ -1,11 +1,10 @@
+import { recall as federatedRecall } from '@oh-my-memories/core';
+import { createAdapterById, createAllAdapters } from '../adapters';
 import { createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult, writeJsonWarning } from '../output/json';
-import { writeTextError, writeTextWarning } from '../output/table';
+import { type TableColumn, renderTable, writeTextError, writeTextWarning } from '../output/table';
 import { parseDuration } from '../parse/duration';
 import type { CommandContext, CommandHandler } from './types';
-
-// Stub for `omem recall <query>`. Implements the argument grammar and the
-// "--source wins, warns if --all also passed" rule from devex-verdict D2.
 
 export const recall: CommandHandler = async (ctx: CommandContext): Promise<number> => {
   const args = parseRecallArgs(ctx.argv);
@@ -26,18 +25,103 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     else writeTextWarning(ctx, warning);
   }
 
-  const error = createOmemError({
-    code: 'OMEM-E03-NO-SOURCES',
-    message: "'omem recall' is stubbed in M1 Lane E1; Lane E2 wires real federation.",
-  });
-  if (ctx.flags.json) {
-    writeJsonResult(ctx, { query: args.value.query, hits: [], stub: true });
-    writeJsonError(ctx, error);
+  const adapters = args.value.source
+    ? (() => {
+        const a = createAdapterById(args.value.source);
+        return a ? [a] : [];
+      })()
+    : createAllAdapters();
+
+  if (adapters.length === 0 && args.value.source) {
+    const error = createOmemError({
+      code: 'OMEM-E03-NO-SOURCES',
+      message: `Unknown source: '${args.value.source}'.`,
+    });
+    if (ctx.flags.json) writeJsonError(ctx, error);
+    else writeTextError(ctx, error);
     return 1;
   }
-  writeTextError(ctx, error);
-  return 1;
+
+  const recallOpts = {
+    query: args.value.query,
+    ...(args.value.source !== undefined ? { sources: [args.value.source] } : {}),
+    ...(args.value.limit !== undefined ? { limit: args.value.limit } : {}),
+    ...(args.value.sinceMs !== undefined ? { since: new Date(args.value.sinceMs) } : {}),
+  };
+  const result = await federatedRecall(adapters, recallOpts);
+
+  // Partial success: some adapters failed, some returned hits.
+  if (result.partial) {
+    for (const failure of result.failures) {
+      const error = createOmemError({
+        code: 'OMEM-E11-IO',
+        message: `Adapter '${failure.adapterId}' failed: ${failure.error}`,
+      });
+      if (ctx.flags.json) writeJsonError(ctx, error);
+      else writeTextError(ctx, error);
+    }
+  }
+
+  if (ctx.flags.json) {
+    writeJsonResult(ctx, {
+      query: args.value.query,
+      hits: result.hits.map((h) => ({
+        source: h.record.source,
+        id: h.record.id,
+        score: Math.round(h.score * 1000) / 1000,
+        timestamp: h.record.timestamp.toISOString(),
+        matchedTerms: h.matchedTerms,
+        text: h.record.text,
+        ...(h.record.sessionId !== undefined ? { sessionId: h.record.sessionId } : {}),
+        ...(h.record.metadata !== undefined ? { metadata: h.record.metadata } : {}),
+      })),
+      ...(result.failures.length > 0 ? { failures: result.failures, partial: true } : {}),
+    });
+    return result.partial ? 5 : 0;
+  }
+
+  // Text output
+  if (result.hits.length === 0) {
+    ctx.stdout.write('No matches found.\n');
+    return result.partial ? 5 : 0;
+  }
+
+  interface HitRow {
+    source: string;
+    score: string;
+    age: string;
+    preview: string;
+  }
+
+  const rows: HitRow[] = result.hits.map((h) => ({
+    source: h.record.source,
+    score: (Math.round(h.score * 100) / 100).toFixed(2),
+    age: relativeAge(h.record.timestamp),
+    preview: h.record.text.slice(0, 80).replace(/\n/g, ' '),
+  }));
+
+  const columns: TableColumn<HitRow>[] = [
+    { header: 'SOURCE', accessor: (r) => r.source },
+    { header: 'SCORE', accessor: (r) => r.score },
+    { header: 'AGE', accessor: (r) => r.age },
+    { header: 'PREVIEW', accessor: (r) => r.preview },
+  ];
+
+  ctx.stdout.write(`${renderTable(rows, columns)}\n`);
+  return result.partial ? 5 : 0;
 };
+
+function relativeAge(date: Date): string {
+  const ms = Date.now() - date.getTime();
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 interface RecallArgs {
   readonly query: string;
@@ -127,7 +211,6 @@ function parseRecallArgs(
       }),
     };
   }
-  // exactOptionalPropertyTypes: build the result only with defined fields.
   const result: RecallArgs = { query, allExplicit };
   if (source !== undefined) (result as { source?: string }).source = source;
   if (limit !== undefined) (result as { limit?: number }).limit = limit;

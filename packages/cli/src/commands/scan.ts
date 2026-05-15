@@ -1,33 +1,104 @@
+import { inventory, schemaVersionFor } from '@oh-my-memories/core';
+import { createAdapterById, createAllAdapters } from '../adapters';
 import { createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult } from '../output/json';
-import { writeTextError } from '../output/table';
+import { type TableColumn, renderTable, writeTextError } from '../output/table';
 import { parseDuration } from '../parse/duration';
 import type { CommandContext, CommandHandler } from './types';
 
-// Stub for `omem scan`. Argument parsing + Tier 2 error contract are real;
-// the actual adapter dispatch lands in Lane E2.
-
 export const scan: CommandHandler = async (ctx: CommandContext): Promise<number> => {
   const args = parseScanArgs(ctx.argv);
-
   if (!args.ok) {
     if (ctx.flags.json) writeJsonError(ctx, args.error);
     else writeTextError(ctx, args.error);
     return 2;
   }
 
-  // Real implementation will live in core/inventory in Lane E2.
-  const error = createOmemError({
-    code: 'OMEM-E03-NO-SOURCES',
-    message: "'omem scan' is stubbed in M1 Lane E1; Lane E2 wires real adapter dispatch.",
-  });
-  if (ctx.flags.json) {
-    writeJsonResult(ctx, { sources: [], stub: true });
-    writeJsonError(ctx, error);
+  const adapters = args.value.source
+    ? (() => {
+        const a = createAdapterById(args.value.source);
+        return a ? [a] : [];
+      })()
+    : createAllAdapters();
+
+  if (adapters.length === 0) {
+    const error = createOmemError({
+      code: 'OMEM-E03-NO-SOURCES',
+      message: args.value.source
+        ? `Unknown source: '${args.value.source}'.`
+        : 'No memory sources available.',
+    });
+    if (ctx.flags.json) writeJsonError(ctx, error);
+    else writeTextError(ctx, error);
     return 1;
   }
-  writeTextError(ctx, error);
-  return 1;
+
+  const entries = await inventory(adapters);
+
+  // Drain each adapter's scan to populate lastScanStats.
+  for (const adapter of adapters) {
+    try {
+      for await (const _record of adapter.scan()) {
+        /* drain */
+      }
+    } catch {
+      /* scan errors handled below via lastScanStats */
+    }
+  }
+
+  interface ScanRow {
+    id: string;
+    name: string;
+    present: string;
+    records: string;
+    corrupt: string;
+    schema: string;
+    healthy: string;
+  }
+
+  const rows: ScanRow[] = entries.map((entry) => {
+    const adapter = adapters.find((a) => a.id === entry.adapterId);
+    const stats = (
+      adapter as { lastScanStats?: { recordCount: number; corruptLines: number } | null }
+    )?.lastScanStats;
+    return {
+      id: entry.adapterId,
+      name: entry.displayName,
+      present: entry.detected.present ? 'yes' : 'no',
+      records: stats ? String(stats.recordCount) : '-',
+      corrupt: stats ? String(stats.corruptLines) : '-',
+      schema: schemaVersionFor(entry.adapterId),
+      healthy: entry.detected.present && stats && stats.corruptLines === 0 ? 'yes' : 'no',
+    };
+  });
+
+  if (ctx.flags.json) {
+    writeJsonResult(ctx, {
+      sources: rows.map((r) => ({
+        id: r.id,
+        displayName: r.name,
+        present: r.present === 'yes',
+        recordCount: r.records === '-' ? null : Number.parseInt(r.records, 10),
+        corruptLines: r.corrupt === '-' ? null : Number.parseInt(r.corrupt, 10),
+        schemaVersion: r.schema,
+        healthy: r.healthy === 'yes',
+      })),
+    });
+    return 0;
+  }
+
+  const columns: TableColumn<ScanRow>[] = [
+    { header: 'SOURCE', accessor: (r) => r.id },
+    { header: 'NAME', accessor: (r) => r.name },
+    { header: 'PRESENT', accessor: (r) => r.present },
+    { header: 'RECORDS', accessor: (r) => r.records },
+    { header: 'CORRUPT', accessor: (r) => r.corrupt },
+    { header: 'SCHEMA', accessor: (r) => r.schema },
+    { header: 'HEALTHY', accessor: (r) => r.healthy },
+  ];
+
+  ctx.stdout.write(`${renderTable(rows, columns)}\n`);
+  return 0;
 };
 
 interface ScanArgs {
@@ -37,7 +108,7 @@ interface ScanArgs {
 
 function parseScanArgs(
   argv: readonly string[],
-): { ok: true; args: ScanArgs } | { ok: false; error: ReturnType<typeof createOmemError> } {
+): { ok: true; value: ScanArgs } | { ok: false; error: ReturnType<typeof createOmemError> } {
   const args: { source?: string; sinceMs?: number } = {};
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i] as string;
@@ -73,7 +144,7 @@ function parseScanArgs(
     }
     return { ok: false, error: usageError(`Unrecognised flag: '${token}'.`) };
   }
-  return { ok: true, args };
+  return { ok: true, value: args };
 }
 
 function usageError(message: string): ReturnType<typeof createOmemError> {
