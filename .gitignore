@@ -48,3 +48,9 @@ Thumbs.db
 *.tmp
 scratch/
 _scratch/
+
+# External tool session state (codex-cli, oh-my-codex, etc.)
+.omx/
+.codex/
+.codex-prompt.txt
+.codex-output.txt

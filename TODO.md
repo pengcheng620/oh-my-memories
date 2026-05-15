@@ -19,7 +19,8 @@
 - [ ] **Lane B** — `packages/adapters/cursor` (full impl + tests + fixtures)
 - [ ] **Lane C** — `packages/adapters/codex` (full impl + tests + fixtures)
 - [ ] **Lane D** — `packages/adapters/serena` (full impl + tests + fixtures)
-- [ ] **Lane E** — `packages/core/{inventory,federation}` complete + `packages/cli/commands/{init,scan,recall,doctor,config}` + `safety/denylist` + `platform/*` + `output/{table,json}` + `skills install` + E2E tests
+- [ ] **Lane E1** — CLI shell + Tier 2 error contract: dispatcher, `output/error.ts` + `error-catalog.ts`, `output/{table,json}.ts`, `parse/duration.ts`, `OMEM_HOME` + `NO_COLOR` + `OMEM_NON_INTERACTIVE` env wiring, `tests/contract/{help,error-catalog,duration}.test.ts`. Uses fixture data, no real adapter calls. _Branch: `feat/m1-cli-shell`._
+- [ ] **Lane E2** — federation + commands + skills install: wires E1 into real adapters via `commands/{init,scan,recall,doctor,config}`, `core/{inventory,federation}`, `safety/denylist`, `skills install`, `tests/e2e/*`. Depends on E1 + ≥1 of A–D. _Branch: `feat/m1-cli-wiring`._
 
 ## After M1 (in priority order)
 

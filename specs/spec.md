@@ -13,7 +13,7 @@ Throughout this doc **MUST / SHOULD / MAY** carry RFC 2119 meaning.
 
 ## 1. Vision
 
-`oh-my-memories` (CLI: `omem`) is the **management layer** that makes every AI tool's memory visible to every other AI tool. We are not a 13th memory engine; we are the hub that federates the existing twelve. M1 ships the smallest end-to-end slice that proves the wedge: `omem scan` finds memory sources on disk, `omem recall --all "<q>"` returns hits across them, and a thin `SKILL.md` per IDE teaches each agent when to call us. Engine work (our own SQLite + FTS5 store), MCP wrapping, and migration ship later, in that order, and only after M1 has earned the right to exist.
+`oh-my-memories` (CLI: `omem`) is the **management layer** that makes every AI tool's memory visible to every other AI tool. We are not a 13th memory engine; we are the hub that federates the existing twelve. M1 ships the smallest end-to-end slice that proves the wedge: `omem scan` finds memory sources on disk, `omem recall "<q>"` returns hits across all configured sources by default (cross-tool federation is the wedge — see `specs/devex-review-verdict.md` D1), and a thin `SKILL.md` per IDE teaches each agent when to call us. Engine work (our own SQLite + FTS5 store), MCP wrapping, and migration ship later, in that order, and only after M1 has earned the right to exist.
 
 ---
 
@@ -56,7 +56,7 @@ The following MUST all hold before M1 is tagged. These mirror the test gap matri
 
 ### 4.1 Headline scenario (the wedge)
 
-A developer with Claude Code + Cursor + Codex + Serena installed runs `omem init`. Then in **Cursor**, the agent is asked _"do you remember when we discussed websockets in Claude Code last month?"_, and the Cursor agent (via the `cursor` SKILL) calls `omem recall --all "websockets"` and surfaces the hit from `~/.claude/projects/*.jsonl`. End-to-end, no human re-typing.
+A developer with Claude Code + Cursor + Codex + Serena installed runs `omem init`. Then in **Cursor**, the agent is asked _"do you remember when we discussed websockets in Claude Code last month?"_, and the Cursor agent (via the `cursor` SKILL) calls `omem recall "websockets"` (default scope is federated — D1) and surfaces the hit from `~/.claude/projects/*.jsonl`. End-to-end, no human re-typing.
 
 ### 4.2 Per-command DoD
 
@@ -298,7 +298,8 @@ This spec is a synthesis. The authoritative reasoning lives in:
 | 6 architecture decisions (interface inheritance, dry-run default, BM25-only M1, schema-drift tolerance, CLI+MCP timing, denylist); 3 critical gaps; 5-lane parallelization | [`specs/eng-review-verdict.md`](./eng-review-verdict.md) |
 | Naming (`oh-my-memories` / `omem`), repo creation, monorepo, language choice (TS + Bun), CLI command set, AGENTS.md tier design | [`specs/product-formation.md`](./product-formation.md) |
 | **M1 = CLI + Skill, MCP deferred to M1.1** — wait for CLI I/O contract to freeze | [`research/G-skill-vs-mcp.md`](../research/G-skill-vs-mcp.md) |
-| Devex review of CLI surface (commands, flags, errors, install flow) | `specs/devex-review-verdict.md` _(M1, planned — next deliverable after this spec)_ |
+| Devex review of CLI surface (D1 default --all, D2 source flags, D3 Tier 2 errors, D4 interactive init, Lane E checklist) | [`specs/devex-review-verdict.md`](./devex-review-verdict.md) |
+| Independent second-opinion review of D1–D4 (PASS-WITH-NOTES, no P1, four P2 doc-alignment fixes applied 2026-05-15) | [`specs/devex-review-verdict.md`](./devex-review-verdict.md) §15 |
 
 When a future change conflicts with anything here, **read the verdict first**, then either justify the change in a new `specs/<topic>-decision.md` or revise the verdict and re-link this spec.
 

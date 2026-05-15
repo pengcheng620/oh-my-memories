@@ -102,6 +102,8 @@ User skipped the consolidated decision round; recommended picks stand. Each is r
 
 **Why**: M1 is read-only and most users just want "everything". The two-flag pattern is fine while `--all` is the dominant use case. M2 introduces `migrate --from / --to` which already requires picking specific sources, so M2 is the natural moment to introduce `--sources <list>` plural form. Document `--all` as "syntactic sugar for `--sources <every-installed>`".
 
+**Precedence rule** (locked, second-opinion P2 fix): if both `--source` and `--all` are passed, **`--source <id>` wins** (more specific overrides the global default). The dispatcher prints a Tier 2 warning to stderr (`OMEM-W01-FLAG: --all ignored because --source was specified`) so scripted callers see the override happened. Lane E `tests/contract/recall.test.ts` must lock this behaviour; documented in `docs/CLI.md` under `omem recall`. Rationale: agent-generated calls will sometimes emit both flags out of habit; we don't want them to silently fail. Mutual-exclusion rejection is too strict for an alpha-stage tool.
+
 ### D3 — Error message tier → **B) Tier 2 Rust-style**
 
 **Why**: Tier 1 (Elm conversational) is a 12-month investment for the prose; Tier 3 (JSON-only) is hostile to humans. Tier 2 hits the DX/maintenance balance: every error has shape `{code, message, hint?, helpUrl?}`, the text path renders a one-line `OMEM-E04-PERM` message followed by a single-sentence hint (run `omem doctor` or fix the path permission), and the `--json` path emits the structured object verbatim. Skills consuming `omem` via `--json` get a stable contract; humans get actionable text. Specifies what `packages/cli/src/output/{table,json}.ts` MUST emit.
@@ -243,13 +245,16 @@ score descending, then timestamp descending.
 
 **Examples**:
 \`\`\`bash
-# Headline scenario
+# Headline scenario — federation is the default, no --all needed
+omem recall "websocket reconnect"
+
+# Same, with --all explicit (sugar; equivalent to the line above)
 omem recall --all "websocket reconnect"
 
 # Limit to last week, JSON for agent consumption
-omem recall --all "JWT refresh" --since 7d --json
+omem recall "JWT refresh" --since 7d --json
 
-# One source only
+# One source only — --source wins if --all is also passed (warning to stderr)
 omem recall --source claude-code "Vault server WCF"
 \`\`\`
 
@@ -327,9 +332,49 @@ These are the contract changes Lane E (`feat/m1-cli-wiring`) MUST land before me
 
 **The four locked decisions (D1–D4) are non-negotiable for M1**. The eight pass findings (F1.x through F8.x) are split between Lane E (P0/P1, owned now) and the post-M1 TODO list (§13).
 
-**Cross-model tension**: none — outside voice was not invoked because the artifact is small (75 lines of CLI surface) and the wedge case is already locked by `specs/ceo-review-verdict.md` and `specs/eng-review-verdict.md`. If the user disputes any of D1–D4, run `codex review docs/CLI.md` against this verdict for a second opinion.
+**Cross-model tension**: see §15 below — second opinion was attempted via `codex exec` (network gateway down 2026-05-15) and recovered via the Cursor `code-reviewer` subagent. Verdict: PASS-WITH-NOTES, no P1, four P2 doc-alignment fixes applied.
 
-**Next per gstack flow**: this verdict closes the planning chain. Lane E is unblocked. Lane A can start in parallel as soon as the user opens the worktree. M1.1 (MCP server) and M2 (migration) inherit the contracts locked here — see references in `specs/spec.md` §8 and §9.
+**Next per gstack flow**: this verdict closes the planning chain. Lane E is unblocked but **resized** per §15 (split into Lane E1 + Lane E2 to fit a one-week solo cadence). Lane A can start in parallel as soon as the user opens the worktree. M1.1 (MCP server) and M2 (migration) inherit the contracts locked here — see references in `specs/spec.md` §8 and §9.
+
+---
+
+## 15. Second-opinion log (2026-05-15)
+
+After D1–D4 were locked above, an independent second opinion was solicited per the gstack workflow.
+
+**Attempt 1 — Codex CLI (`codex exec`)**: failed. The local Codex CLI (v0.121.0) routes through a corporate gateway at `http://10.35.148.173:8080/v1/responses` which timed out after 5 reconnect attempts. No model output was produced. Falling back rather than blocking the workflow on external infrastructure.
+
+**Attempt 2 — Cursor `code-reviewer` subagent**: completed. Verdict **PASS-WITH-NOTES**, no P1 findings. Confidence-filtered findings (P2 only):
+
+| # | Finding | Action taken |
+|----|----|----|
+| P2-1 | D1 + D2 interact: with `--all` as default, `--all` is mostly redundant on the happy path; needs explicit precedence rule when both `--source` and `--all` are passed | Added precedence rule to D2: `--source` wins, dispatcher prints `OMEM-W01-FLAG` warning to stderr. Locked in Lane E `tests/contract/recall.test.ts` |
+| P2-2 | `spec.md` §1 + §4.1 still mandate `omem recall --all "websockets"` — should drop redundant `--all` after D1 | Updated both spec.md sections to use bare `omem recall "<q>"` and added forward-link to D1 |
+| P2-3 | This verdict's §9 examples still show `omem recall --all ...` — slightly self-contradictory after D1 | Updated §9 to lead with `omem recall "..."` (no `--all`), kept one explicit `--all` example to show the sugar form |
+| P2-4 | `spec.md` §12 Decision Provenance row for this verdict still says "planned" — stale | Updated `spec.md` §12 to mark this verdict as shipped and add the second-opinion row |
+| P2-5 | Lane E §12 checklist is achievable as a DevEx slice in ~one focused week, but stacked with `spec.md` Lane E ownership (core, federation, e2e, shared JSONL) it's **oversized** for one dev / one week | See "Lane E split" below |
+| P2-6 | D3 §12 bundle (catalog + lint rule + structured exit-5 + `--json` error objects + contract tests) is real schedule risk on top of Lane E's already-large scope | Folded into Lane E split below |
+
+**Validating signal — external CLI conventions check** (from the same subagent):
+
+- `gh` defaults to **narrow** context (current repo) and uses **repeatable flags** for lists. omem's D1 is intentionally the opposite wedge — federation IS the product. Decision stands.
+- Stripe / Vercel / fly all do interactive first-run for auth/project linking. **Validates D4.**
+- Structured machine output is in-family for modern CLIs aiming at automation. **Validates D3** (Tier 2 is the right tier; not too hostile, not too prose-heavy).
+
+**Lane E split** (P2-5 + P2-6 fix): split the original Lane E into **two sub-lanes** so a single dev can ship each in a focused work-week without timeline slip.
+
+| Sub-lane | Branch | Scope | Output |
+|----|----|----|----|
+| **Lane E1 — CLI shell + error contract** | `feat/m1-cli-shell` | Dispatcher (`packages/cli/src/index.ts` rewire), `output/error.ts` + `output/error-catalog.ts`, `output/{table,json}.ts`, `parse/duration.ts`, `tests/contract/{help,error-catalog,duration}.test.ts`, `OMEM_HOME` + `NO_COLOR` + `OMEM_NON_INTERACTIVE` env wiring. **Does not** call any adapter yet — uses fixture data | Runnable `omem --help`, `omem recall <q> --json` (returning fixture hits), all four error cases produce Tier 2 output, contract tests green |
+| **Lane E2 — federation + commands + skills install** | `feat/m1-cli-wiring` | Wires Lane E1 into real adapters: `commands/{init,scan,recall,doctor,config}.ts`, `core/{inventory,federation}/`, `safety/denylist`, `skills install` flow, `tests/e2e/*`. Depends on Lane E1 + at least one of Lane A–D landing | First end-to-end `omem recall "<q>"` returns real hits across configured adapters |
+
+Lane E2 cannot land before E1 (depends on the error contract + dispatcher) but Lanes A, B, C, D **can** land in parallel with E1 because they don't depend on the dispatcher — they only depend on the Adapter SDK, which is already published.
+
+**TODO additions from §15** (also mirrored to `TODO.md` and the impact checklist in §12):
+
+- [ ] Update §12 Lane E impact checklist to point at E1 vs E2 ownership for each line item
+- [ ] Document `OMEM-W01-FLAG` warning in CLI.md and the canonical error catalog (precedence rule for `--source` + `--all`)
+- [ ] First Lane E1 PR description must reference §15 P2-1 (precedence) and P2-5 (split) so the reviewer knows the scope is intentional, not under-delivering on §12
 
 ---
 
