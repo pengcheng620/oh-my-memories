@@ -46,7 +46,7 @@ export interface MainOptions {
   readonly stdinIsTty?: boolean;
 }
 
-const VERSION = '0.0.0';
+const VERSION = '0.1.0-alpha.1';
 
 /**
  * Run the CLI.

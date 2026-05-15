@@ -1,18 +1,50 @@
 {
-  "name": "@oh-my-memories/cli",
-  "version": "0.0.0",
-  "description": "omem — manage AI memories across all your tools",
+  "name": "oh-my-memories",
+  "version": "0.1.0-alpha.1",
+  "description": "omem — manage, federate, and migrate AI memories across all your tools (Claude Code, Cursor, Codex, Serena, ...)",
   "license": "MIT",
+  "author": "lup",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pengcheng620/oh-my-memories.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/pengcheng620/oh-my-memories#readme",
+  "bugs": {
+    "url": "https://github.com/pengcheng620/oh-my-memories/issues"
+  },
+  "keywords": [
+    "ai",
+    "memory",
+    "claude-code",
+    "cursor",
+    "codex",
+    "gemini",
+    "copilot",
+    "mcp",
+    "agent",
+    "skill",
+    "federation",
+    "migration"
+  ],
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "bin": {
-    "omem": "./bin/omem",
-    "oh-my-memories": "./bin/omem"
+    "omem": "./bin/omem.cjs",
+    "oh-my-memories": "./bin/omem.cjs"
   },
-  "files": ["bin", "src", "README.md"],
+  "files": ["bin", "dist", "skills", "README.md", "CHANGELOG.md", "LICENSE"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "bun run build:bundle && bun run build:skills",
+    "build:bundle": "bun build ./src/index.ts --target=node --format=cjs --outfile=./dist/cli.cjs --external better-sqlite3",
+    "build:skills": "node ./scripts/copy-skills.cjs",
+    "build:binary": "bun build ./src/binary-entry.ts --compile --outfile=./dist/omem",
+    "build:binary:linux-x64": "bun build ./src/binary-entry.ts --compile --target=bun-linux-x64 --outfile=./dist/omem-linux-x64",
+    "build:binary:darwin-x64": "bun build ./src/binary-entry.ts --compile --target=bun-darwin-x64 --outfile=./dist/omem-darwin-x64",
+    "build:binary:darwin-arm64": "bun build ./src/binary-entry.ts --compile --target=bun-darwin-arm64 --outfile=./dist/omem-darwin-arm64",
+    "build:binary:windows-x64": "bun build ./src/binary-entry.ts --compile --target=bun-windows-x64 --outfile=./dist/omem-windows-x64.exe",
+    "build:binaries": "bun run build:binary:linux-x64 && bun run build:binary:darwin-x64 && bun run build:binary:darwin-arm64 && bun run build:binary:windows-x64",
     "test": "bun test"
   },
   "dependencies": {
@@ -22,6 +54,9 @@
     "@oh-my-memories/adapter-cursor": "workspace:*",
     "@oh-my-memories/adapter-codex": "workspace:*",
     "@oh-my-memories/adapter-serena": "workspace:*"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "publishConfig": {
     "access": "public"

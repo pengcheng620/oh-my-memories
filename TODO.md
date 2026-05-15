@@ -29,21 +29,23 @@
 - [x] **Lane E1** — CLI shell + Tier 2 error contract _Merged @ 9d2c647._
 - [x] **Lane E2** — federation + commands + skills install _Merged @ 3f27f00 via PR [#7](https://github.com/pengcheng620/oh-my-memories/pull/7)._ All 7 CI checks green. 294 tests / 0 fail / 731 assertions.
 
-## After M1 (in priority order)
+## Next (in priority order)
 
-- [ ] **M1.1** — MCP server (`packages/mcp/`) + `omem mcp serve` + `omem mcp install --ide=<ide>`
-- [ ] **M2.A** — Migration (`omem migrate --from --to --dry-run --apply`) + `IWritableAdapter`
+- [x] **M0.5** — Distribution: package renamed to `oh-my-memories`, node-bundled CLI + Bun-compiled binaries, release.yml workflow, VERSION → `0.1.0-alpha.1`. Tag/publish is a manual one-liner (`git tag v0.1.0-alpha.1 && git push --tags`).
+- [ ] **M1.1** — MCP server (`packages/mcp/`) + `omem mcp serve` + `omem mcp install --ide=<ide>`. Wraps `core/federation.recall()` as MCP tools. ~1 week.
+- [ ] **M2.A** — Migration (`omem migrate --from --to --dry-run --apply`) + `IWritableAdapter` interface (mini-spec at `specs/iwritable-adapter-mini-spec.md`)
 - [ ] **M2.B** — Backup (`omem export --all` / `omem import <archive>`)
 - [ ] **M2.C** — Self-update (`omem upgrade`)
-- [ ] **M3** — Canonical store (SQLite + FTS5) + `omem remember` + (opt-in) `sqlite-vec` + RRF
+- [ ] **M3** — Canonical store (SQLite + FTS5) + `omem remember` + (opt-in) `sqlite-vec` + RRF (mini-spec at `specs/m3-canonical-store-spec.md`)
 - [ ] **M4** — Public Adapter SDK semver-major freeze + `omem adapter list/install` + plugin discovery
 - [ ] **M5+** — Team / shared store, web UI, cross-machine sync, Cat C SaaS adapters (mem0/Letta/Zep/Cognee)
 
 ## Blockers / risks
 
-- **None blocking M1 right now.** Spec rewrite is queued, not blocked.
+- **M0.5 blocks M1.1**: MCP `omem mcp install` needs the binary/npm package to exist first.
 - **Watching**: MCP SDK changes in Anthropic's Q3 release cycle (could affect M1.1 work plan).
 - **Watching**: Codex / Cursor on-disk format changes (we tolerate schema drift, but adapter tests need keeping current).
+- **M2.A design gap**: `IWritableAdapter` interface not yet defined. Needs a mini-spec before implementation.
 
 ## Decisions log (where to find rationale)
 

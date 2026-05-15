@@ -48,17 +48,17 @@ describe('dispatcher — discovery', () => {
   test('`omem -v` and `omem --version` print version', async () => {
     const { streams: s1, options: o1 } = opts();
     expect(await main(['-v'], o1)).toBe(0);
-    expect(s1.stdout.text()).toBe('0.0.0\n');
+    expect(s1.stdout.text()).toBe('0.1.0-alpha.1\n');
     const { streams: s2, options: o2 } = opts();
     expect(await main(['--version'], o2)).toBe(0);
-    expect(s2.stdout.text()).toBe('0.0.0\n');
+    expect(s2.stdout.text()).toBe('0.1.0-alpha.1\n');
   });
 
   test('`omem --version --json` emits structured output', async () => {
     const { streams, options } = opts();
     const code = await main(['--version', '--json'], options);
     expect(code).toBe(0);
-    expect(JSON.parse(streams.stdout.text())).toEqual({ version: '0.0.0' });
+    expect(JSON.parse(streams.stdout.text())).toEqual({ version: '0.1.0-alpha.1' });
   });
 });
 

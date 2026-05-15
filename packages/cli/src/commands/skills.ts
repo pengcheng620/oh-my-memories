@@ -99,10 +99,15 @@ export const skills: CommandHandler = async (ctx: CommandContext): Promise<numbe
 };
 
 function resolveSkillSource(ide: string): string {
-  // Walk up from this file to find the monorepo root (contains skills/).
-  // In the monorepo: packages/cli/src/commands/skills.ts → ../../../../skills/<ide>/SKILL.md
-  // We use a more robust approach: look for the skills dir relative to known anchors.
+  // Skills can ship in three layouts:
+  //   1. Published npm tarball: copied to <package>/skills/<ide>/SKILL.md
+  //      next to the bundled CLI (see scripts/copy-skills.cjs).
+  //   2. Local monorepo run via Bun: source TS at packages/cli/src/commands/skills.ts
+  //      → ../../../../skills/<ide>/SKILL.md (four levels up to repo root).
+  //   3. Compiled binary launched from any cwd: walk up from process.cwd().
+  // We try each in order and accept the first that exists.
   const candidates = [
+    join(__dirname, '..', '..', 'skills', ide, 'SKILL.md'),
     join(__dirname, '..', '..', '..', '..', 'skills', ide, 'SKILL.md'),
     join(process.cwd(), 'skills', ide, 'SKILL.md'),
   ];

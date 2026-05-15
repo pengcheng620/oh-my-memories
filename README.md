@@ -80,7 +80,10 @@ Read [`docs/PRODUCT.md`](./docs/PRODUCT.md) for the full thesis.
 
 ## Status
 
-**Pre-alpha.** Not on npm yet. Building M1 in public.
+**Alpha.** M1 complete (federated read across CC/Cursor/Codex/Serena, 294 tests).
+M0.5 distribution ready: `0.1.0-alpha.1` will ship to npm under the `alpha`
+dist-tag once the release tag is pushed. Use `npm install --tag alpha
+oh-my-memories` to opt in. M1.1 (MCP server) is next.
 
 ## Project layout
 

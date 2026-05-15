@@ -1,0 +1,144 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-*'
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-binaries:
+    name: build binary (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: bun-linux-x64
+            artifact: omem-linux-x64
+          - os: macos-13
+            target: bun-darwin-x64
+            artifact: omem-darwin-x64
+          - os: macos-14
+            target: bun-darwin-arm64
+            artifact: omem-darwin-arm64
+          - os: windows-latest
+            target: bun-windows-x64
+            artifact: omem-windows-x64.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3'
+
+      - run: bun install
+
+      - name: Compile binary
+        working-directory: packages/cli
+        shell: bash
+        run: |
+          bun build ./src/binary-entry.ts \
+            --compile \
+            --target=${{ matrix.target }} \
+            --outfile=./dist/${{ matrix.artifact }}
+
+      - name: Smoke test (non-Windows)
+        if: runner.os != 'Windows'
+        working-directory: packages/cli
+        run: ./dist/${{ matrix.artifact }} --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: packages/cli/dist/${{ matrix.artifact }}
+          if-no-files-found: error
+
+  npm-publish:
+    name: npm publish
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: bun install
+
+      - name: Verify VERSION matches tag
+        shell: bash
+        run: |
+          tag="${GITHUB_REF##refs/tags/v}"
+          file_version="$(cat VERSION | tr -d '[:space:]')"
+          if [[ "$tag" != "$file_version" ]]; then
+            echo "::error::Tag $tag does not match VERSION $file_version"
+            exit 1
+          fi
+          echo "Tag and VERSION agree on $tag"
+
+      - name: Build CLI bundle + skills
+        working-directory: packages/cli
+        run: bun run build
+
+      - name: Determine npm dist-tag
+        id: tag
+        shell: bash
+        run: |
+          version="$(cat VERSION | tr -d '[:space:]')"
+          if [[ "$version" == *"-alpha"* ]]; then
+            echo "tag=alpha" >> "$GITHUB_OUTPUT"
+          elif [[ "$version" == *"-beta"* ]]; then
+            echo "tag=beta" >> "$GITHUB_OUTPUT"
+          elif [[ "$version" == *"-rc"* ]]; then
+            echo "tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: npm publish (oh-my-memories)
+        working-directory: packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --tag "${{ steps.tag.outputs.tag }}" --provenance --access public
+
+  github-release:
+    name: GitHub release
+    needs: [build-binaries, npm-publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Stage release files
+        run: |
+          mkdir -p release
+          for dir in artifacts/*/; do
+            cp "$dir"* release/
+          done
+          ls -la release/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

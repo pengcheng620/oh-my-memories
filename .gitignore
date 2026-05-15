@@ -10,6 +10,9 @@ build/
 **/build/
 *.tsbuildinfo
 
+# CLI publish staging — copied from repo-root /skills/ on `npm run build`
+packages/cli/skills/
+
 # Test
 coverage/
 **/coverage/
