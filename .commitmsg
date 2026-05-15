@@ -1,0 +1,26 @@
+feat(cli): add Tier 2 primitives (error catalog, duration parser, platform, output, denylist)
+
+Adds the foundation pieces from PLAN.md S2 / devex-verdict S15:
+
+  packages/cli/src/output/
+    error-catalog.ts   Single source of truth for OMEM-E*/W* codes (F3.4)
+    error.ts           OmemError POJO + factory (F3.1, JSON-stable wire shape)
+    json.ts            --json renderer: result + NDJSON warnings/errors
+    table.ts           text renderer: ASCII columns, NO_COLOR, ANSI dim hints
+
+  packages/cli/src/parse/
+    duration.ts        strict <n>{s,m,h,d,w,M,y} + ISO-8601 parser (F2.3)
+
+  packages/cli/src/platform/
+    home.ts            OMEM_HOME override (F6.3)
+    paths.ts           cross-OS config/index/log paths
+    interactive.ts     TTY + OMEM_NON_INTERACTIVE + NO_COLOR (F6.2, F6.4)
+
+  packages/cli/src/safety/
+    denylist.ts        spec.md S7.1: *.pem .env* auth.json *credentials*
+                       *secret* *.key token.json (non-user-configurable in M1)
+
+Tests: 119 cases / 8 files / 248 assertions, all green.
+       tsc --noEmit clean, biome check clean.
+
+Dispatcher rewire + command stubs follow in the next commit.
