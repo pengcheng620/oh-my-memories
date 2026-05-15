@@ -12,7 +12,9 @@ describe('error-catalog', () => {
 
   test('every catalog key matches its entry.code (no drift)', () => {
     for (const [key, entry] of Object.entries(ERROR_CATALOG)) {
-      expect(entry.code).toBe(key);
+      // entry.code is the literal union; cast to string for the comparison
+      // because Object.entries widens the key to string.
+      expect(entry.code as string).toBe(key);
     }
   });
 
@@ -59,16 +61,11 @@ describe('createOmemError', () => {
     expect(err.hint).toBe('Try chmod a+r.');
   });
 
-  test('omits hint key when catalog has no defaultHint and caller supplied none', () => {
-    // No catalog entry today lacks a defaultHint, but the function must still
-    // be safe under exactOptionalPropertyTypes when a future code has none.
-    // Simulate by passing an empty hint override against an entry, and then
-    // checking that nullish values are not attached.
-    const err = createOmemError({
-      code: 'OMEM-E11-IO',
-      hint: undefined,
-    });
-    // defaultHint exists for E11, so it must come through.
+  test('falls back to catalog defaultHint when caller does not supply one', () => {
+    // No catalog entry today lacks a defaultHint, but createOmemError must
+    // still be safe (no `hint: undefined` attached) under
+    // exactOptionalPropertyTypes when a future code has none.
+    const err = createOmemError({ code: 'OMEM-E11-IO' });
     expect(err.hint).toBe(ERROR_CATALOG['OMEM-E11-IO'].defaultHint);
   });
 
