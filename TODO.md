@@ -11,7 +11,9 @@
 - [x] **Second-opinion review on D1–D4** — Cursor `code-reviewer` subagent (codex CLI was unreachable). Verdict PASS-WITH-NOTES, fixes applied, Lane E split into E1 + E2. _See `specs/devex-review-verdict.md` §15._
 - [x] **`docs/PLAN.md`** — six-lane plan with DoD, file ownership, dependencies, branch names, merge order, risk register. _Done._
 - [x] **Open Lane A worktree** — `.worktrees/lane-a/` on branch `feat/m1-claude-code-adapter`. Baseline green (biome 36/0, tsc 0, bun test 1/1, 100% cov). _Done @ 704610d (gitignore commit; worktree itself is local-only)._
-- [ ] **Implement Lane A** — first Cat A adapter (`packages/adapters/claude-code`). Full impl + 4 tests + fixtures per `docs/PLAN.md` §2. Active worktree: `.worktrees/lane-a/`. Lanes B/C/D/E1 stay un-opened until A merges (lazy-open avoids 5× idle baselines).
+- [x] **Implement Lane A — RED** — 4 named test files + 3 fixtures, 11 failing assertions for the right reasons. _Done @ 70b4e98._
+- [x] **Implement Lane A — GREEN** — `paths.ts`, `parser.ts`, refactored `index.ts`, README schema-version policy. Local DoD gates: `bun test` 15/15, `tsc` 0, `biome` 0. _Done @ edd95cd._
+- [ ] **Land Lane A** — PR [#1](https://github.com/pengcheng620/oh-my-memories/pull/1) open. Awaiting cross-OS CI green (ubuntu/macos/windows) and reviewer sign-off, then squash-merge per `docs/PLAN.md` §4.5. Worktree + branch cleanup follow.
 
 ## Next (M1 — 5 parallel lanes)
 
