@@ -1,0 +1,3 @@
+{"timestamp":"2026-04-02T11:00:00.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"first valid turn"}]}}
+{"timestamp":"2026-04-02T11:00:01.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":NOT-VALID-JSON
+{"timestamp":"2026-04-02T11:00:02.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"third valid turn"}]}}
