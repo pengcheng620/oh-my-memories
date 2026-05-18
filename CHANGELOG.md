@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+(No changes yet.)
+
+## [0.1.0-alpha.3] - 2026-05-18
+
 ### Added
 - **M4 Adapter SDK 1.0.0**: `@oh-my-memories/adapter-sdk` is now semver-major-stable. Breaking changes require a 2.0.0 bump. Changes in this release: `ScanOptions.query` field for remote pre-filtering hints; `IBaseAdapter.version?: string` for adapter self-reporting; `ISaasAdapter.fetchRecords()` deprecated (use `scan(opts)` with `opts.query`); orphaned `ScanResult` type retained but marked as optional statistics, not part of `scan()` return type.
 - **M4 Plugin loader** (`platform/plugin-loader.ts`): scans `~/.omem/node_modules/@omem-adapter/*`, dynamically imports each package, validates the default export against `IBaseAdapter`, handles ID collisions (`OMEM-W02`), and wraps sync generator `scan()` into `AsyncIterable` automatically.

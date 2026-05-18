@@ -34,27 +34,29 @@ contract test so it never drifts from `--help`.)
 
 Then: `omem skills install --ide=cursor` writes a `SKILL.md` that teaches Cursor's agent "when the user asks to recall something, run `omem recall --all`." Now Cursor's agent finds your CC memory, automatically.
 
-## What it does (M1)
+## What it does
 
 1. **Inventory** — scan and list every memory source on your machine
-2. **Recall** — federated search across all of them via one CLI call
+2. **Recall** — federated search across all of them via one CLI call (BM25 + Reciprocal Rank Fusion)
 3. **Skills** — auto-install thin wrappers that teach Claude Code, Cursor, Codex, and Gemini agents to use omem
-4. **Adapters for**: Claude Code, Cursor, Codex, Serena MCP
-
-## What it does now (M2 + M3)
-
+4. **Adapters** — built-in for Claude Code, Cursor, Codex, Serena MCP
 5. **Migrate** — move memories between tools (`omem migrate --from cc --to cursor --apply`)
 6. **Export / Import** — portable `.tar.gz` backups (`omem export --all --output=backup.tar.gz`)
 7. **Upgrade** — self-update from npm (`omem upgrade`)
 8. **MCP server** — `omem mcp serve` so IDE agents call us as a tool; `omem mcp install --ide=cursor` wires it in
-9. **Canonical store** — `omem remember <text>` writes to a local SQLite+FTS5 engine; `omem recall` fuses BM25 results via Reciprocal Rank Fusion
+9. **Canonical store** — `omem remember <text>` writes to a local SQLite+FTS5 engine; `omem recall` fuses canonical + adapter results
+10. **Plugin ecosystem** — `omem adapter install <name>` installs community adapters from npm (`@omem-adapter/*`); adapter SDK is stable at 1.0.0
 
-## What it will do (M4+)
+## What's next (M5+)
 
-10. **Plugin adapters** — `omem adapter install <name>` installs community adapters from npm (`@omem-adapter/*`)
-11. **More adapters** — basic-memory, Gemini CLI, mem0, Letta, Zep, Cognee
+- Team / shared memory store (server mode)
+- Web UI for browsing memories
+- Cross-machine sync
+- More adapters — basic-memory, Gemini CLI, mem0, Letta, Zep, Cognee
+- Memory provenance / "show why" tracing
+- Optional vector search (`sqlite-vec`)
 
-See [`docs/ROADMAP.md`](./docs/ROADMAP.md).
+See [`docs/ROADMAP.md`](./docs/ROADMAP.md) for the full history and future bets.
 
 ## Quick start
 
@@ -82,6 +84,11 @@ omem migrate --from=claude-code --to=cursor --dry-run
 
 # (M3) store your own memories
 omem remember "always use bun:sqlite for the canonical store"
+
+# (M4) manage adapter plugins
+omem adapter list                                # show built-in + installed
+omem adapter install @omem-adapter/my-tool       # install from npm
+omem adapter uninstall my-tool                   # remove a plugin
 ```
 
 ## Why not just use mem0 / Letta / Zep?
@@ -92,9 +99,10 @@ Read [`docs/PRODUCT.md`](./docs/PRODUCT.md) for the full thesis.
 
 ## Status
 
-**Alpha.** M0.5 → M1 → M1.1 → M2 → M3 complete (455 tests, 0 failures across Ubuntu/macOS/Windows).
-`0.1.0-alpha.2` is the current release: federated read (CC/Cursor/Codex/Serena), MCP server,
-cross-tool migration + backup, canonical SQLite+FTS5 store with BM25/RRF recall, and `omem remember`.
+**Alpha.** M0.5 through M4 complete (478 tests, 0 failures across Ubuntu/macOS/Windows).
+`0.1.0-alpha.3` is the current release: federated read (CC/Cursor/Codex/Serena), MCP server,
+cross-tool migration + backup, canonical SQLite+FTS5 store with BM25/RRF recall, `omem remember`,
+and plugin ecosystem (`omem adapter install/list/uninstall` with `@omem-adapter/*` npm scope).
 
 Install: `npm install --tag alpha oh-my-memories` or `bun add -g oh-my-memories@alpha`.
 
@@ -102,10 +110,10 @@ Install: `npm install --tag alpha oh-my-memories` or `bun add -g oh-my-memories@
 
 ```
 oh-my-memories/
-├── packages/cli/         — omem CLI binary
-├── packages/core/        — storage + retrieval engine (M3+)
-├── packages/mcp/         — MCP server (M1.1)
-├── packages/adapter-sdk/ — write your own adapter
+├── packages/cli/         — omem CLI binary + plugin loader
+├── packages/core/        — storage engine (SQLite+FTS5) + retrieval + federation
+├── packages/mcp/         — MCP server (omem_recall + omem_scan tools)
+├── packages/adapter-sdk/ — adapter interface (1.0.0 stable)
 ├── packages/adapters/    — built-in adapters (CC, Cursor, Codex, Serena)
 ├── skills/               — IDE-specific SKILL.md packs
 ├── docs/                 — humans read this

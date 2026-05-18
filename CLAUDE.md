@@ -50,20 +50,21 @@
 
 ---
 
-## What "done" means for M1
+## What "done" means
 
-A change is M1-ready when:
+A change is ready when:
 1. The relevant adapter / command has unit tests (≥80% line coverage in changed file).
 2. There is one E2E test in `tests/e2e/` that exercises the new code path through the CLI.
 3. `bun run packages/cli/bin/omem -- <command>` works end-to-end on Windows AND macOS (CI verifies).
 4. Output schema is documented in the command's `--help` AND in `docs/CLI.md`.
 5. If the command produces JSON, the schema is in `packages/cli/src/output/schemas/`.
+6. If the change touches `adapter-sdk`, it must not break the 1.0.0 semver contract.
 
 ---
 
 ## Cursor-specific notes
 
-- **MCP dogfooding**: once M1.1 ships MCP, `.cursor/mcp.json` will configure `omem mcp serve` for this repo. Then editing this codebase will let Cursor's agent recall past discussions about it. (Currently empty — placeholder.)
+- **MCP dogfooding**: M1.1 shipped MCP. Use `omem mcp install --ide=cursor` to wire `omem mcp serve` into `.cursor/mcp.json`. Cursor's agent will then recall past discussions about this repo via the `omem_recall` tool.
 - **Skills**: this repo has its own `.claude/skills/` for project-internal automation. The `skills/cursor/` directory at repo root is what we **publish** for end users.
 - **Don't** run `omem init` against your real machine while developing — it will scan your private memory sources. Use the fixtures in `tests/fixtures/` for local dev.
 
@@ -86,13 +87,19 @@ When relevant, the agent should call:
 
 ---
 
+## Release process
+
+Before any version bump, tag, or publish, follow the checklist in `.cursor/rules/release-checklist.mdc`. The rule triggers automatically when `VERSION`, `CHANGELOG.md`, or `package.json` are edited. Key gates: docs must reflect shipped features, `CHANGELOG.md` must have a dated header, all tests must pass.
+
+---
+
 ## Anti-patterns (specific to this repo)
 
 | Anti-pattern | Instead |
 |--------------|---------|
 | Adapter writes a 200-line custom JSONL parser | Use `packages/adapters/_shared/jsonl.ts` |
 | Command directly calls `fs.readFileSync` | Go through `packages/core/` so retrieval logic is testable |
-| MCP work happening in an M1 PR | Open a separate `m1.1-mcp` branch; reviewer will reject mixing |
+| Breaking `adapter-sdk` 1.0.0 contract | Bump to 2.0.0 only after explicit decision; create a migration guide |
 | New adapter without a test fixture | Add a 3-line fixture to `tests/fixtures/<adapter-name>/` first |
 | `console.log` for output | Use `packages/cli/src/output/` formatters (table / json / pretty) |
 | Hardcoded path `~/.claude` | Use `packages/cli/src/platform/<adapter>.ts` resolver (handles `%USERPROFILE%` on Windows) |

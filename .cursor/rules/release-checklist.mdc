@@ -1,0 +1,40 @@
+---
+description: Pre-release documentation and quality checklist — enforced before every version bump, tag, or publish
+globs: ["VERSION", "CHANGELOG.md", "package.json"]
+alwaysApply: false
+---
+
+# Release Checklist
+
+Before bumping VERSION, tagging a release, or publishing to npm, **every item below must be verified**. Do NOT skip steps. If a doc is stale, fix it before proceeding.
+
+## 1. Documentation currency
+
+| File | Check |
+|------|-------|
+| `README.md` | "What it does" list matches shipped features. Status section reflects current test count, version, and milestone. |
+| `AGENTS.md` | Section 6 (Current Status) matches reality. Section 9 (What NOT to do) has no stale restrictions from completed milestones. |
+| `CLAUDE.md` | "What done means" criteria are current. Anti-patterns table is not referencing completed/removed concerns. |
+| `CHANGELOG.md` | `[Unreleased]` section is promoted to a dated version header matching `VERSION`. A fresh empty `[Unreleased]` section exists above it. |
+| `docs/ROADMAP.md` | Completed milestone is marked ✅. Next milestone is clearly identified. |
+| `docs/ARCHITECTURE.md` | Architecture diagram includes all shipped components. "What's intentionally missing" list has no items that have shipped. |
+| `docs/ADAPTER-SDK.md` | SDK version matches `packages/adapter-sdk/package.json`. API examples compile against current interfaces. |
+
+## 2. Version consistency
+
+- `VERSION` file matches the version header in `CHANGELOG.md`
+- `VERSION` file matches `version` in root `package.json` (if present)
+- `CHANGELOG.md` has a dated `[x.y.z] - YYYY-MM-DD` header for the new version
+- If adapter-sdk version changed, `docs/ADAPTER-SDK.md` status line is updated
+
+## 3. Quality gates
+
+- All tests pass: `bun test` (full suite)
+- Lint is clean: `bunx biome check .`
+- No `TODO` or `FIXME` comments referencing the releasing milestone
+
+## 4. After tagging
+
+- Push tag: `git tag v<version> && git push origin v<version>`
+- Verify CI release workflow triggers
+- Update `docs/ROADMAP.md` if the milestone gate includes "publish to npm"

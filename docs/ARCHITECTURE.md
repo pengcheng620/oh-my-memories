@@ -7,19 +7,21 @@
 │                            User / AI Agent                                │
 │   Claude Code · Cursor · Codex · Gemini CLI · Copilot · human terminal    │
 └─────────────────────────┬──────────────────────────┬─────────────────────┘
-                          │ CLI (M1)                  │ MCP tools (M1.1+)
+                          │ CLI                       │ MCP tools
                           ▼                          ▼
                   ┌─────────────────────────────────────┐
                   │         packages/cli (omem)          │
-                  │  scan · recall · migrate · skills · │
-                  │  init · doctor · config             │
+                  │  scan · recall · migrate · remember │
+                  │  adapter · mcp · skills · export ·  │
+                  │  import · upgrade · init · doctor   │
                   └────────────────┬────────────────────┘
                                    │
                                    ▼
                   ┌─────────────────────────────────────┐
                   │       packages/core                  │
-                  │  inventory  ·  federation  ·         │
-                  │  retrieval  ·  canonical-store (M3+) │
+                  │  inventory · federation (RRF) ·      │
+                  │  retrieval · canonical-store         │
+                  │  (SQLite + FTS5 + BM25)              │
                   └────────────────┬────────────────────┘
                                    │ AnyAdapter[]
                                    ▼
@@ -27,23 +29,24 @@
             │                                              │
             ▼                                              ▼
    ┌───────────────────┐                       ┌────────────────────┐
-   │ packages/adapters │                       │ packages/           │
-   │  /claude-code     │                       │  adapter-sdk        │
+   │  Built-in adapters │                       │ packages/           │
+   │  /claude-code     │                       │  adapter-sdk 1.0.0  │
    │  /cursor          │ implements           │  IBaseAdapter        │
    │  /codex           │  ─────────────────►  │  IIdeAdapter         │
    │  /serena          │                       │  IMcpAdapter         │
    │  /_shared         │                       │  ISaasAdapter        │
-   └────────┬──────────┘                       └────────────────────┘
-            │ reads
-            ▼
-  ┌─────────────────────────────────────────────────────────────────┐
-  │  Memory sources on disk                                          │
-  │  ~/.claude/projects/*.jsonl                                      │
-  │  ~/.cursor/projects/*/agent-transcripts/*.jsonl                  │
-  │  ~/.codex/sessions/*.jsonl                                       │
-  │  <project>/.serena/memories/*.md                                 │
-  │  <project>/.cursor/projects/*/agent-transcripts/*.jsonl          │
-  └─────────────────────────────────────────────────────────────────┘
+   └────────┬──────────┘                       └────────┬───────────┘
+            │                                           │
+            │ reads                          implements │
+            ▼                                           ▼
+   ┌────────────────────────┐              ┌────────────────────────┐
+   │  Memory sources on disk │              │  Plugin adapters (M4)  │
+   │  ~/.claude/projects/    │              │  ~/.omem/node_modules/ │
+   │  ~/.cursor/projects/    │              │  @omem-adapter/*       │
+   │  ~/.codex/sessions/     │              │  (npm / local install) │
+   │  .serena/memories/      │              └────────────────────────┘
+   │  ~/.omem/canonical.db   │
+   └────────────────────────┘
 ```
 
 ## Why this shape
@@ -99,15 +102,17 @@ Read source → emit records → score → return. Stateless. Fast enough for th
 ### M2: still no persistent store
 Migration writes to **destination adapters' native format** (write-side of `IWritableAdapter`). We don't introduce our own store yet.
 
-### M3+: SQLite + FTS5 + sqlite-vec
-- `~/.omem/index.sqlite` — canonical store of normalized records from all sources
-- FTS5 virtual table for BM25
-- `sqlite-vec` extension for embeddings (only if user opts in)
-- Reciprocal Rank Fusion to combine BM25 + vector results
-- Adapters re-scan periodically (cron / file-watch) to keep index fresh
-- Recall reads from index; falls back to live scan if index is stale or missing
+### M3 (shipped): SQLite + FTS5 + BM25 + RRF
+- `~/.omem/canonical.db` — canonical store for `omem remember` records
+- FTS5 virtual table with `unicode61 remove_diacritics 2` tokenizer for BM25 retrieval
+- Reciprocal Rank Fusion (k=60) combines canonical BM25 results with adapter scan results
+- Schema versioning via `schema_meta` table + migrations in `packages/core/src/migrations/`
+- Cold-start safe: missing `canonical.db` is silently skipped; adapter-only recall works without it
+- Requires Bun runtime (or Bun-compiled binary) for `bun:sqlite`; adapter-only commands work under Node
 
-**Why not M1?** Because M1 needs to prove "federation works" without taking on indexing complexity, embedding model choice, schema migration, vector dim drift, etc. Persistent storage adds 3 weeks of work and zero user value if the federation thesis is wrong.
+### M3.1+ (future): sqlite-vec
+- Optional vector search via `sqlite-vec` extension (user opt-in, gated by demand)
+- Would add embedding-based recall alongside BM25, fused via the same RRF pipeline
 
 ## Cross-cutting concerns
 
@@ -125,15 +130,12 @@ Migration writes to **destination adapters' native format** (write-side of `IWri
 - Adapter versions move together with the product (one bump = whole monorepo)
 - SDK version = breaking-change boundary for 3rd-party adapters (independent semver, lockstep with major omem version)
 
-## What's intentionally missing in M1
+## What's intentionally missing (M5+)
 
-- No background daemon / watcher
+- No background daemon / watcher (manual `omem remember` is the write path)
 - No sync between machines
 - No web UI
 - No team / shared store
-- No write to memory sources (read-only)
-- No vector / semantic search
-- No MCP server (M1.1)
-- No plugin SDK for 3rd-party adapters at runtime (M4)
+- No vector / semantic search (sqlite-vec deferred until demand)
 
-Each is a tax someone might pay later. M1 doesn't pay it.
+Each is a tax someone might pay later. Current milestones don't pay it.

@@ -98,8 +98,10 @@ If you find yourself wanting to change one of those decisions, **read the verdic
 
 ## 6. Current Status
 
-- **Milestone**: **M1** — Inventory (scan) + Read-only Federation (recall) + 4 adapters (CC, Cursor, Codex, Serena) + Skill packs for 4 IDEs
-- **MCP**: **M1.1** (lands ~1 week after M1; postponed per `research/G-skill-vs-mcp.md`)
+- **Completed milestones**: M0.5 (distribution), M1 (inventory + federation), M1.1 (MCP server), M2 (migration + backup + self-update), M3 (canonical SQLite+FTS5 store), M4 (adapter SDK 1.0.0 + plugin ecosystem)
+- **Test suite**: 478 tests, 0 failures across Ubuntu/macOS/Windows
+- **Version**: `0.1.0-alpha.3`
+- **Next**: M5 (team/shared memory, web UI, cross-machine sync)
 - **Branch**: `main`
 - **Remote**: `https://github.com/pengcheng620/oh-my-memories`
 - **Roadmap**: see `docs/ROADMAP.md`
@@ -136,12 +138,11 @@ bun run packages/cli/bin/omem -- recall --all "query"
 
 ## 9. What NOT to do
 
-- ❌ Do not add a vector / embedding feature in M1. Deferred to M3+.
-- ❌ Do not add MCP server work until M1 lands. (It is already designed; just not yet.)
 - ❌ Do not add a TUI / GUI. Deferred indefinitely.
-- ❌ Do not write to memory sources you read from in M1. M1 is **read-only**. Migration (M2) writes, but always behind `--apply` after `--dry-run`.
-- ❌ Do not invent a new adapter interface. Use `packages/adapter-sdk/`.
+- ❌ Do not break `adapter-sdk` 1.0.0 interface. It's semver-major-stable; breaking changes require 2.0.0.
 - ❌ Do not bypass the safety denylist (`*.pem`, `.env*`, `auth.json`, `*credentials*`). Even if scanning your own machine.
+- ❌ Do not add vector / embedding features without a plan. Deferred until user demand justifies `sqlite-vec` integration.
+- ❌ Do not write to memory sources without `--dry-run` → `--apply` safety. Migration always defaults to dry-run.
 
 ---
 
@@ -149,13 +150,16 @@ bun run packages/cli/bin/omem -- recall --all "query"
 
 | You want to ... | Touch ... |
 |-----------------|-----------|
-| Add a new IDE / MCP source | `packages/adapters/<name>/` + register in `packages/cli/src/commands/scan.ts` |
+| Add a new built-in adapter | `packages/adapters/<name>/` + register in `packages/cli/src/adapters.ts` |
+| Create a third-party plugin adapter | Publish `@omem-adapter/<name>` on npm; see `docs/ADAPTER-SDK.md` |
 | Change CLI command behavior | `packages/cli/src/commands/<cmd>.ts` |
 | Change retrieval / merge logic | `packages/core/src/retrieval.ts` or `federation.ts` |
+| Change canonical store schema | `packages/core/src/migrations/` + bump schema version in `canonical-store.ts` |
+| Add/modify MCP tools | `packages/mcp/src/tools/` |
 | Add docs that humans read | `docs/` |
 | Add docs that future-AI reads | This file (`AGENTS.md`) or a new `.cursor/rules/*.mdc` |
 | Capture a new design decision | `specs/<topic>-decision.md` (then link from this file) |
-| Add or change CI / GitHub automation | `.github/workflows/*.yml` (see `test.yml` for the cross-OS matrix that gates `docs/PLAN.md` §4.5) |
+| Add or change CI / GitHub automation | `.github/workflows/*.yml` |
 
 ---
 
