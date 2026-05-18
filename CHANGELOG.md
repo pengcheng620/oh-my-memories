@@ -24,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Adapter realism review fixes from M5 carried forward (Basic Memory `type` field, OpenCode storage path).
-- Suite total now **432 tests** (2 pre-existing import round-trip failures, all new tests pass).
+- **Import round-trip tests fixed**: `ADAPTER_HOME_SUBPATHS` was missing entries for M5/M6 adapters (gemini-cli, basic-memory, aider, copilot-chat, opencode). Export now skips zero-file sources and excludes project-local adapters (aider, serena) from home-based backup.
+- Suite total now **529 tests, 0 failures** (up from 432 pass / 2 fail).
 
 ## [0.1.0-alpha.4] - 2026-05-18
 

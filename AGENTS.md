@@ -104,7 +104,7 @@ If you find yourself wanting to change one of those decisions, **read the verdic
 ## 6. Current Status
 
 - **Completed milestones**: M0.5 (distribution), M1 (inventory + federation), M1.1 (MCP server), M2 (migration + backup + self-update), M3 (canonical SQLite+FTS5 store), M4 (adapter SDK 1.0.0 + plugin ecosystem), M5 (3 new adapters + stats/prune/adapter-search), M6 (Aider + Copilot Chat adapters, Gemini MCP install, `omem watch`)
-- **Test suite**: 432 pass, 2 known failures (pre-existing import round-trip)
+- **Test suite**: 529 tests, 0 failures
 - **Version**: `0.1.0-beta.1`
 - **Next**: M7 (semantic search, provenance)
 - **Branch**: `main`

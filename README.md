@@ -115,7 +115,7 @@ Read [`docs/PRODUCT.md`](./docs/PRODUCT.md) for the full thesis.
 
 ## Status
 
-**Beta.** M0.5 through M6 complete (432 tests pass, 2 known pre-existing failures).
+**Beta.** M0.5 through M6 complete (529 tests, 0 failures).
 `0.1.0-beta.1` is the current release: 9 built-in adapters (CC/Cursor/Codex/Serena/Gemini CLI/Basic Memory/OpenCode/Aider/Copilot Chat),
 MCP server (supports Claude Code, Cursor, Codex, Gemini), cross-tool migration + backup,
 canonical SQLite+FTS5 store with BM25/RRF recall, `omem remember`, plugin ecosystem
