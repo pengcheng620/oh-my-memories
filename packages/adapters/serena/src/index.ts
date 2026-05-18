@@ -91,14 +91,16 @@ export class SerenaAdapter implements IMcpAdapter {
           metadata.title = parsed.title;
         }
 
+        metadata.filePath = file;
+
         recordCount++;
         const record: MemoryRecord = {
           id,
           source: this.id,
           timestamp,
           text: parsed.body,
+          metadata,
         };
-        if (Object.keys(metadata).length > 0) record.metadata = metadata;
         yield record;
       }
     } finally {

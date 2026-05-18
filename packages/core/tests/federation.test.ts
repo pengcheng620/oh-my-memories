@@ -288,3 +288,137 @@ describe('federation: recall + canonical store (RRF fusion)', () => {
     expect(result.hits.every((h) => h.origin === 'adapter')).toBe(true);
   });
 });
+
+describe('federation: provenance', () => {
+  test('adapter hits carry provenance with keyword + recency match reasons', async () => {
+    const records = [makeRecord('1', 'cursor', 'jwt refresh token flow', 1000)];
+    const result = await recall([fakeAdapter('cursor', records)], { query: 'jwt refresh' });
+    expect(result.hits.length).toBe(1);
+    const hit = result.hits[0]!;
+
+    expect(hit.provenance).toBeDefined();
+    expect(hit.provenance.source).toBe('cursor');
+    expect(hit.provenance.timestamp).toBeInstanceOf(Date);
+
+    const reasons = hit.provenance.matchReason;
+    expect(reasons.length).toBeGreaterThanOrEqual(1);
+
+    const keywordReason = reasons.find((r) => r.type === 'keyword');
+    expect(keywordReason).toBeDefined();
+    if (keywordReason?.type === 'keyword') {
+      expect(keywordReason.terms).toContain('jwt');
+      expect(keywordReason.terms).toContain('refresh');
+    }
+
+    const recencyReason = reasons.find((r) => r.type === 'recency');
+    expect(recencyReason).toBeDefined();
+    if (recencyReason?.type === 'recency') {
+      expect(recencyReason.boost).toBeGreaterThan(0);
+    }
+  });
+
+  test('provenance carries sessionId when record has one', async () => {
+    const record: MemoryRecord = {
+      id: '1',
+      source: 'claude-code',
+      sessionId: 'ses_abc123',
+      timestamp: new Date(),
+      text: 'always use strict mode',
+    };
+    const result = await recall([fakeAdapter('claude-code', [record])], { query: 'strict' });
+    expect(result.hits.length).toBe(1);
+    expect(result.hits[0]!.provenance.sessionId).toBe('ses_abc123');
+  });
+
+  test('provenance carries filePath from record metadata', async () => {
+    const record: MemoryRecord = {
+      id: '1',
+      source: 'cursor',
+      timestamp: new Date(),
+      text: 'use bun for builds',
+      metadata: { filePath: '/home/user/.cursor/projects/abc/agent-transcripts/123.jsonl' },
+    };
+    const result = await recall([fakeAdapter('cursor', [record])], { query: 'bun' });
+    expect(result.hits.length).toBe(1);
+    expect(result.hits[0]!.provenance.filePath).toBe(
+      '/home/user/.cursor/projects/abc/agent-transcripts/123.jsonl',
+    );
+  });
+
+  test('provenance falls back to metadata.path when filePath is absent', async () => {
+    const record: MemoryRecord = {
+      id: '1',
+      source: 'aider',
+      timestamp: new Date(),
+      text: 'use aider for refactoring',
+      metadata: { path: '/project/.aider.chat.history.md' },
+    };
+    const result = await recall([fakeAdapter('aider', [record])], { query: 'aider' });
+    expect(result.hits.length).toBe(1);
+    expect(result.hits[0]!.provenance.filePath).toBe('/project/.aider.chat.history.md');
+  });
+
+  let workdir: string;
+  let dbPath: string;
+
+  beforeEach(() => {
+    workdir = mkdtempSync(join(tmpdir(), 'omem-prov-'));
+    dbPath = join(workdir, 'canonical.db');
+  });
+
+  afterEach(() => {
+    try {
+      rmSync(workdir, { recursive: true, force: true });
+    } catch {
+      // Windows handle release lag
+    }
+  });
+
+  test('canonical hits carry provenance with bm25 match reason', async () => {
+    const store = CanonicalStore.open({ path: dbPath });
+    try {
+      store.remember({ text: 'always use TypeScript strict mode', source: 'omem' });
+    } finally {
+      store.close();
+    }
+    const result = await recall([fakeAdapter('a', [])], {
+      query: 'typescript',
+      canonicalStorePath: dbPath,
+    });
+    expect(result.hits.length).toBe(1);
+    const hit = result.hits[0]!;
+    expect(hit.provenance.source).toBe('omem');
+    const bm25 = hit.provenance.matchReason.find((r) => r.type === 'bm25');
+    expect(bm25).toBeDefined();
+  });
+
+  test('RRF fusion merges match reasons from both adapter and canonical arms', async () => {
+    const ts = new Date('2026-05-15T10:00:00Z');
+    const sharedText = 'shared typescript knowledge';
+    const adapterRecord: MemoryRecord = {
+      id: 'a1',
+      source: 'cursor',
+      timestamp: ts,
+      text: sharedText,
+    };
+
+    const store = CanonicalStore.open({ path: dbPath });
+    try {
+      store.remember({ text: sharedText, timestamp: ts, source: 'omem' });
+    } finally {
+      store.close();
+    }
+
+    const result = await recall([fakeAdapter('cursor', [adapterRecord])], {
+      query: 'typescript',
+      canonicalStorePath: dbPath,
+    });
+
+    const sharedHit = result.hits.find((h) => h.record.text === sharedText);
+    expect(sharedHit).toBeDefined();
+
+    const reasonTypes = sharedHit!.provenance.matchReason.map((r) => r.type);
+    expect(reasonTypes).toContain('keyword');
+    expect(reasonTypes).toContain('bm25');
+  });
+});

@@ -98,6 +98,7 @@ export async function* parseJsonl(
       timestamp,
       role: parsed.payload.role,
       text,
+      metadata: { filePath },
     };
   }
 }

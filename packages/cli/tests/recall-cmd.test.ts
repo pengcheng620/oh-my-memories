@@ -139,3 +139,67 @@ describe('omem recall (M3 canonical-store wiring)', () => {
     expect(result.hits.length).toBe(2);
   });
 });
+
+describe('omem recall (M7 provenance)', () => {
+  test('JSON output includes provenance with matchReason', async () => {
+    {
+      const ctx = opts();
+      await main(['remember', 'use jwt for authentication', '--json'], ctx.options);
+    }
+    const ctx = opts();
+    const code = await main(['recall', 'jwt', '--json'], ctx.options);
+    expect(code).toBe(0);
+    const result = JSON.parse(ctx.streams.stdout.text());
+    expect(result.hits.length).toBe(1);
+
+    const hit = result.hits[0];
+    expect(hit.provenance).toBeDefined();
+    expect(hit.provenance.source).toBe('omem');
+    expect(hit.provenance.timestamp).toBeDefined();
+    expect(Array.isArray(hit.provenance.matchReason)).toBe(true);
+    expect(hit.provenance.matchReason.length).toBeGreaterThanOrEqual(1);
+
+    const bm25 = hit.provenance.matchReason.find((r: { type: string }) => r.type === 'bm25');
+    expect(bm25).toBeDefined();
+  });
+
+  test('text output shows MATCHED BY column', async () => {
+    {
+      const ctx = opts();
+      await main(['remember', 'always use strict typescript'], ctx.options);
+    }
+    const ctx = opts();
+    const code = await main(['recall', 'typescript'], ctx.options);
+    expect(code).toBe(0);
+    const out = ctx.streams.stdout.text();
+    expect(out).toContain('MATCHED BY');
+    expect(out).toContain('bm25:');
+  });
+
+  test('--verbose shows SESSION and FILE columns', async () => {
+    {
+      const ctx = opts();
+      await main(['remember', 'use bun runtime'], ctx.options);
+    }
+    const ctx = opts();
+    const code = await main(['recall', 'bun', '--verbose'], ctx.options);
+    expect(code).toBe(0);
+    const out = ctx.streams.stdout.text();
+    expect(out).toContain('SESSION');
+    expect(out).toContain('FILE');
+    expect(out).toContain('MATCHED BY');
+  });
+
+  test('--verbose is a global flag (not per-command)', async () => {
+    {
+      const ctx = opts();
+      await main(['remember', 'use bun runtime'], ctx.options);
+    }
+    const ctx = opts();
+    const code = await main(['recall', '--verbose', 'bun'], ctx.options);
+    expect(code).toBe(0);
+    const out = ctx.streams.stdout.text();
+    expect(out).toContain('SESSION');
+    expect(out).toContain('FILE');
+  });
+});

@@ -74,12 +74,14 @@ export async function* parseStorage(
 
         stats.recordCount++;
 
+        const msgFilePath = join(sessionMsgDir, msgFileName);
         const record: MemoryRecord = {
           id: messageId,
           source,
           timestamp: ts ? new Date(ts) : new Date(),
           role,
           text,
+          metadata: { filePath: msgFilePath },
         };
         if (sessionId) {
           record.sessionId = sessionId;

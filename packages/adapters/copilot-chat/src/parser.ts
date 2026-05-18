@@ -43,7 +43,9 @@ export function reconstructSession(lines: string[], stats: ParseStats): CopilotS
       if (cleaned === '') continue;
       try {
         const op = JSON.parse(cleaned) as Record<string, unknown>;
-        applyOp(op, session, (s) => { session = s; });
+        applyOp(op, session, (s) => {
+          session = s;
+        });
       } catch {
         stats.corruptLines++;
       }
@@ -51,7 +53,9 @@ export function reconstructSession(lines: string[], stats: ParseStats): CopilotS
     }
     try {
       const op = JSON.parse(trimmed) as Record<string, unknown>;
-      applyOp(op, session, (s) => { session = s; });
+      applyOp(op, session, (s) => {
+        session = s;
+      });
     } catch {
       stats.corruptLines++;
     }
@@ -133,7 +137,7 @@ export function extractRecords(
         role: 'user',
         text: userText,
         sessionId,
-        metadata: session.customTitle ? { title: session.customTitle } : undefined,
+        metadata: { filePath, ...(session.customTitle ? { title: session.customTitle } : {}) },
       });
       stats.totalRecords++;
     }
@@ -153,7 +157,7 @@ export function extractRecords(
           role: 'assistant',
           text: assistantText,
           sessionId,
-          metadata: session.customTitle ? { title: session.customTitle } : undefined,
+          metadata: { filePath, ...(session.customTitle ? { title: session.customTitle } : {}) },
         });
         stats.totalRecords++;
       }

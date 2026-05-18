@@ -3,12 +3,27 @@ import type { AnyAdapter, MemoryRecord } from '@oh-my-memories/adapter-sdk';
 import { CanonicalStore } from './canonical-store';
 import { createFingerprint } from './fingerprint';
 
+export type MatchReason =
+  | { type: 'keyword'; terms: string[] }
+  | { type: 'bm25'; score: number }
+  | { type: 'semantic'; similarity: number; model: string }
+  | { type: 'recency'; boost: number };
+
+export interface Provenance {
+  source: string;
+  sessionId?: string;
+  filePath?: string;
+  timestamp: Date;
+  matchReason: MatchReason[];
+}
+
 export interface RecallHit {
   record: MemoryRecord;
   score: number;
   matchedTerms: string[];
   /** Where this hit came from: 'adapter' (federated scan) or 'canonical' (L2 BM25 store). */
   origin: 'adapter' | 'canonical';
+  provenance: Provenance;
 }
 
 export interface RecallOptions {
@@ -70,13 +85,22 @@ export async function recall(
     targets.map(async (adapter) => {
       const hits: RecallHit[] = [];
       for await (const record of adapter.scan(scanOpts)) {
-        const score = scoreRecord(record.text, terms, record.timestamp, now);
+        const { score, recencyBoost } = scoreRecordDetailed(
+          record.text,
+          terms,
+          record.timestamp,
+          now,
+        );
         if (score > 0) {
+          const matched = terms.filter((t) => record.text.toLowerCase().includes(t));
+          const matchReason: MatchReason[] = [{ type: 'keyword', terms: matched }];
+          if (recencyBoost > 0) matchReason.push({ type: 'recency', boost: recencyBoost });
           hits.push({
             record,
             score,
-            matchedTerms: terms.filter((t) => record.text.toLowerCase().includes(t)),
+            matchedTerms: matched,
             origin: 'adapter',
+            provenance: buildProvenance(record, matchReason),
           });
         }
       }
@@ -145,12 +169,18 @@ function recallFromCanonical(opts: RecallOptions, terms: readonly string[]): Rec
     };
     if (opts.since !== undefined) recallQuery.since = opts.since;
     const rows = store.recall(recallQuery);
-    return rows.map<RecallHit>((row) => ({
-      record: row.record,
-      score: row.score,
-      matchedTerms: terms.filter((t) => row.record.text.toLowerCase().includes(t)),
-      origin: 'canonical',
-    }));
+    return rows.map<RecallHit>((row) => {
+      const matched = terms.filter((t) => row.record.text.toLowerCase().includes(t));
+      const matchReason: MatchReason[] = [{ type: 'bm25', score: row.score }];
+      if (matched.length > 0) matchReason.push({ type: 'keyword', terms: matched });
+      return {
+        record: row.record,
+        score: row.score,
+        matchedTerms: matched,
+        origin: 'canonical',
+        provenance: buildProvenance(row.record, matchReason),
+      };
+    });
   } finally {
     store.close();
   }
@@ -168,7 +198,12 @@ function recallFromCanonical(opts: RecallOptions, terms: readonly string[]): Rec
 function fuseRRF(adapterList: RecallHit[], canonicalList: RecallHit[]): RecallHit[] {
   const byFingerprint = new Map<
     string,
-    { hit: RecallHit; rrf: number; sources: Set<'adapter' | 'canonical'> }
+    {
+      hit: RecallHit;
+      rrf: number;
+      allReasons: MatchReason[];
+      sources: Set<'adapter' | 'canonical'>;
+    }
   >();
 
   const accumulate = (list: RecallHit[]) => {
@@ -180,12 +215,16 @@ function fuseRRF(adapterList: RecallHit[], canonicalList: RecallHit[]): RecallHi
         byFingerprint.set(fp, {
           hit,
           rrf: contribution,
+          allReasons: [...hit.provenance.matchReason],
           sources: new Set([hit.origin]),
         });
       } else {
         existing.rrf += contribution;
         existing.sources.add(hit.origin);
-        // Canonical record wins as the canonical copy if both exist.
+        for (const reason of hit.provenance.matchReason) {
+          const isDuplicate = existing.allReasons.some((r) => r.type === reason.type);
+          if (!isDuplicate) existing.allReasons.push(reason);
+        }
         if (hit.origin === 'canonical') existing.hit = hit;
       }
     });
@@ -194,9 +233,10 @@ function fuseRRF(adapterList: RecallHit[], canonicalList: RecallHit[]): RecallHi
   accumulate(adapterList);
   accumulate(canonicalList);
 
-  const merged = Array.from(byFingerprint.values()).map(({ hit, rrf }) => ({
+  const merged = Array.from(byFingerprint.values()).map(({ hit, rrf, allReasons }) => ({
     ...hit,
     score: rrf,
+    provenance: { ...hit.provenance, matchReason: allReasons },
   }));
 
   merged.sort((a, b) => {
@@ -224,12 +264,12 @@ function tokenize(query: string): string[] {
 // raw TF score; records from today get up to 2x.
 const DECAY_HALF_LIFE_MS = 7 * 24 * 60 * 60 * 1000;
 
-function scoreRecord(
+function scoreRecordDetailed(
   text: string,
   terms: readonly string[],
   timestamp: Date,
   nowMs: number,
-): number {
+): { score: number; recencyBoost: number } {
   const lower = text.toLowerCase();
   let tf = 0;
   for (const term of terms) {
@@ -239,9 +279,21 @@ function scoreRecord(
       idx = lower.indexOf(term, idx + 1);
     }
   }
-  if (tf === 0) return 0;
+  if (tf === 0) return { score: 0, recencyBoost: 0 };
 
   const ageMs = Math.max(0, nowMs - timestamp.getTime());
-  const recencyBoost = 1 + 2 ** (-ageMs / DECAY_HALF_LIFE_MS);
-  return tf * recencyBoost;
+  const recencyBoost = 2 ** (-ageMs / DECAY_HALF_LIFE_MS);
+  return { score: tf * (1 + recencyBoost), recencyBoost };
+}
+
+function buildProvenance(record: MemoryRecord, matchReason: MatchReason[]): Provenance {
+  const meta = record.metadata as Record<string, unknown> | undefined;
+  const filePath = meta?.filePath ?? meta?.path;
+  return {
+    source: record.source,
+    ...(record.sessionId !== undefined ? { sessionId: record.sessionId } : {}),
+    ...(filePath !== undefined ? { filePath: String(filePath) } : {}),
+    timestamp: record.timestamp,
+    matchReason,
+  };
 }

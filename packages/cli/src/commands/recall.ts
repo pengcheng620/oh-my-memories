@@ -1,4 +1,4 @@
-import { recall as federatedRecall } from '@oh-my-memories/core';
+import { type MatchReason, type Provenance, recall as federatedRecall } from '@oh-my-memories/core';
 import { createAdapterById, loadAdapterById, loadAllAdapters } from '../adapters';
 import { createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult, writeJsonWarning } from '../output/json';
@@ -90,6 +90,7 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
         text: h.record.text,
         ...(h.record.sessionId !== undefined ? { sessionId: h.record.sessionId } : {}),
         ...(h.record.metadata !== undefined ? { metadata: h.record.metadata } : {}),
+        provenance: serializeProvenance(h.provenance),
       })),
       ...(result.failures.length > 0 ? { failures: result.failures, partial: true } : {}),
     });
@@ -102,28 +103,68 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     return result.partial ? 5 : 0;
   }
 
-  interface HitRow {
-    source: string;
-    score: string;
-    age: string;
-    preview: string;
+  const verbose = ctx.flags.verbose;
+
+  if (verbose) {
+    interface VerboseHitRow {
+      source: string;
+      score: string;
+      age: string;
+      matchedBy: string;
+      session: string;
+      filePath: string;
+      preview: string;
+    }
+
+    const rows: VerboseHitRow[] = result.hits.map((h) => ({
+      source: h.record.source,
+      score: (Math.round(h.score * 100) / 100).toFixed(2),
+      age: relativeAge(h.record.timestamp),
+      matchedBy: formatMatchReasons(h.provenance.matchReason),
+      session: h.provenance.sessionId ?? '—',
+      filePath: h.provenance.filePath ?? '—',
+      preview: h.record.text.slice(0, 60).replace(/\n/g, ' '),
+    }));
+
+    const columns: TableColumn<VerboseHitRow>[] = [
+      { header: 'SOURCE', accessor: (r) => r.source },
+      { header: 'SCORE', accessor: (r) => r.score },
+      { header: 'AGE', accessor: (r) => r.age },
+      { header: 'MATCHED BY', accessor: (r) => r.matchedBy },
+      { header: 'SESSION', accessor: (r) => r.session },
+      { header: 'FILE', accessor: (r) => r.filePath },
+      { header: 'PREVIEW', accessor: (r) => r.preview },
+    ];
+
+    ctx.stdout.write(`${renderTable(rows, columns)}\n`);
+  } else {
+    interface HitRow {
+      source: string;
+      score: string;
+      age: string;
+      matchedBy: string;
+      preview: string;
+    }
+
+    const rows: HitRow[] = result.hits.map((h) => ({
+      source: h.record.source,
+      score: (Math.round(h.score * 100) / 100).toFixed(2),
+      age: relativeAge(h.record.timestamp),
+      matchedBy: formatMatchReasons(h.provenance.matchReason),
+      preview: h.record.text.slice(0, 80).replace(/\n/g, ' '),
+    }));
+
+    const columns: TableColumn<HitRow>[] = [
+      { header: 'SOURCE', accessor: (r) => r.source },
+      { header: 'SCORE', accessor: (r) => r.score },
+      { header: 'AGE', accessor: (r) => r.age },
+      { header: 'MATCHED BY', accessor: (r) => r.matchedBy },
+      { header: 'PREVIEW', accessor: (r) => r.preview },
+    ];
+
+    ctx.stdout.write(`${renderTable(rows, columns)}\n`);
   }
 
-  const rows: HitRow[] = result.hits.map((h) => ({
-    source: h.record.source,
-    score: (Math.round(h.score * 100) / 100).toFixed(2),
-    age: relativeAge(h.record.timestamp),
-    preview: h.record.text.slice(0, 80).replace(/\n/g, ' '),
-  }));
-
-  const columns: TableColumn<HitRow>[] = [
-    { header: 'SOURCE', accessor: (r) => r.source },
-    { header: 'SCORE', accessor: (r) => r.score },
-    { header: 'AGE', accessor: (r) => r.age },
-    { header: 'PREVIEW', accessor: (r) => r.preview },
-  ];
-
-  ctx.stdout.write(`${renderTable(rows, columns)}\n`);
   return result.partial ? 5 : 0;
 };
 
@@ -256,4 +297,46 @@ function consumeValue(
     };
   }
   return { ok: true, value: next, advance: i + 1 };
+}
+
+function serializeProvenance(prov: Provenance): Record<string, unknown> {
+  return {
+    source: prov.source,
+    ...(prov.sessionId !== undefined ? { sessionId: prov.sessionId } : {}),
+    ...(prov.filePath !== undefined ? { filePath: prov.filePath } : {}),
+    timestamp: prov.timestamp.toISOString(),
+    matchReason: prov.matchReason.map((r) => {
+      switch (r.type) {
+        case 'keyword':
+          return { type: 'keyword', terms: r.terms };
+        case 'bm25':
+          return { type: 'bm25', score: Math.round(r.score * 1000) / 1000 };
+        case 'semantic':
+          return {
+            type: 'semantic',
+            similarity: Math.round(r.similarity * 1000) / 1000,
+            model: r.model,
+          };
+        case 'recency':
+          return { type: 'recency', boost: Math.round(r.boost * 1000) / 1000 };
+      }
+    }),
+  };
+}
+
+function formatMatchReasons(reasons: MatchReason[]): string {
+  return reasons
+    .map((r) => {
+      switch (r.type) {
+        case 'keyword':
+          return `kw:${r.terms.join(',')}`;
+        case 'bm25':
+          return `bm25:${Math.abs(r.score).toFixed(1)}`;
+        case 'semantic':
+          return `sem:${r.similarity.toFixed(2)}`;
+        case 'recency':
+          return `rec:${r.boost.toFixed(2)}`;
+      }
+    })
+    .join(' + ');
 }

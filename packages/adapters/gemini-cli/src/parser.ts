@@ -68,6 +68,7 @@ export async function* parseJsonl(
       timestamp: typeof ts === 'string' ? new Date(ts) : new Date(),
       role,
       text,
+      metadata: { filePath },
     };
     if (sessionId !== undefined) {
       record.sessionId = sessionId;
