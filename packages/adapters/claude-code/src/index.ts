@@ -2,27 +2,45 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type {
+  AdapterFormatCapability,
   DetectResult,
   IIdeAdapter,
+  IWritableAdapter,
   MemoryRecord,
+  MigrateContext,
+  PreparedWritePlan,
   ScanOptions,
   ScanResult,
+  WriteBatch,
+  WriteBatchReceipt,
+  WriteProbeResult,
 } from '@oh-my-memories/adapter-sdk';
 import { type ParseStats, parseJsonl } from './parser';
 import { resolveDefaultStorageRoot } from './paths';
+import { ClaudeCodeWriter } from './writer';
+
+export { ClaudeCodeWriter, CC_IMPORT_PROJECT_DIR } from './writer';
+export type { ClaudeCodeWriterOptions } from './writer';
 
 export interface ClaudeCodeAdapterOptions {
   // Override the default ~/.claude/projects path. Used by tests to point at
   // a tmp fixture root; production callers should pass nothing.
   storageRoot?: string;
+  /** Override the import id (tests). */
+  importId?: string;
+  /** Override the clock used for filename stamping (tests). */
+  clock?: () => Date;
+  /** Override the uuid factory (tests). */
+  uuidFactory?: () => string;
 }
 
-export class ClaudeCodeAdapter implements IIdeAdapter {
+export class ClaudeCodeAdapter implements IIdeAdapter, IWritableAdapter {
   readonly id = 'claude-code';
   readonly category = 'ide' as const;
   readonly displayName = 'Claude Code';
 
   #storageRoot: string;
+  #writer: ClaudeCodeWriter;
 
   // Set after `scan()` finishes draining. PLAN.md §2 Lane A DoD requires the
   // corrupt-line counter to be exposed via a side channel; we reuse the SDK's
@@ -31,6 +49,25 @@ export class ClaudeCodeAdapter implements IIdeAdapter {
 
   constructor(opts?: ClaudeCodeAdapterOptions) {
     this.#storageRoot = opts?.storageRoot ?? resolveDefaultStorageRoot();
+    this.#writer = new ClaudeCodeWriter({
+      storageRoot: this.#storageRoot,
+      ...(opts?.importId !== undefined ? { importId: opts.importId } : {}),
+      ...(opts?.clock !== undefined ? { clock: opts.clock } : {}),
+      ...(opts?.uuidFactory !== undefined ? { uuidFactory: opts.uuidFactory } : {}),
+    });
+  }
+
+  get writeCapability(): AdapterFormatCapability {
+    return this.#writer.writeCapability;
+  }
+  probeWrite(ctx: MigrateContext): Promise<WriteProbeResult> {
+    return this.#writer.probeWrite(ctx);
+  }
+  planWrites(batch: WriteBatch, ctx: MigrateContext): Promise<PreparedWritePlan> {
+    return this.#writer.planWrites(batch, ctx);
+  }
+  writeBatch(batch: WriteBatch, ctx: MigrateContext): Promise<WriteBatchReceipt> {
+    return this.#writer.writeBatch(batch, ctx);
   }
 
   storageRoot(): string {

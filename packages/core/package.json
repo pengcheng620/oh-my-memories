@@ -12,7 +12,9 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@oh-my-memories/adapter-sdk": "workspace:*"
+    "@oh-my-memories/adapter-sdk": "workspace:*",
+    "@types/tar": "7",
+    "tar": "7"
   },
   "publishConfig": {
     "access": "public"

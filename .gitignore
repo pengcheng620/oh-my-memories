@@ -13,6 +13,10 @@ build/
 # CLI publish staging — copied from repo-root /skills/ on `npm run build`
 packages/cli/skills/
 
+# Cursor IDE skill install target — written by `omem skills install --ide=cursor`
+# from the source-of-truth at /skills/cursor/SKILL.md. Per-machine, not tracked.
+.cursor/skills/
+
 # Test
 coverage/
 **/coverage/

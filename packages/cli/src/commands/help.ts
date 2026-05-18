@@ -24,12 +24,14 @@ COMMANDS (M1.1+)
   mcp serve                     Run as MCP server (stdio)
   mcp install --ide=<ide>       Wire omem into an IDE's mcp.json
 
-COMMANDS (M2+)
-  migrate --from <src> --to <tgt>
-  export --all
-  import <archive>
-  remember <text>
-  upgrade
+COMMANDS (M2)
+  migrate --from <src> --to <tgt>   Copy memories between adapters
+  export --output <archive>         Pack adapter storage into a tar.gz
+  import <archive>                  Restore an archive produced by 'omem export'
+  upgrade [--check | --apply]       Check for and install the latest omem
+
+COMMANDS (M3)
+  remember <text>                   Store a memory in omem's own canonical store
 
 GLOBAL OPTIONS
   --json                        Emit JSON to stdout, NDJSON warnings on stderr
@@ -134,6 +136,176 @@ OPTIONS
                   Both --ide=NAME and --ide NAME are accepted (F2.2).
 `;
 
+const MIGRATE_HELP = `omem migrate - copy memories between tools
+
+USAGE
+  omem migrate --from <src> --to <tgt>
+              [--strategy copy|move|link]
+              [--on-conflict skip-on-conflict|overwrite|newest-wins]
+              [--since <duration>] [--project <absPath>] [--session <id>]
+              [--dry-run | --apply]
+              [--i-approve-dest-writes]
+              [--json]
+
+DESCRIPTION
+  Default is dry-run. Pass '--apply' to actually write into the destination
+  adapter. When stdin is not a TTY (or '--non-interactive' / OMEM_NON_INTERACTIVE=1
+  is set), '--apply' additionally requires '--i-approve-dest-writes' (or
+  OMEM_I_APPROVE_DEST_WRITES=1) so scripts can never accidentally overwrite
+  memory transcripts.
+
+  Supported destinations: claude-code, cursor, codex.
+  'serena' is read-only in M2.A.
+
+OPTIONS
+  --from <id>             Source adapter id (required).
+  --to <id>               Destination adapter id (required, must be writable).
+  --strategy <s>          copy (default) | move | link (link is M2.B+).
+  --on-conflict <p>       skip-on-conflict (default) | overwrite | newest-wins.
+                          Adapters declare which policies they support; a
+                          mismatch errors with OMEM-E24-MIGRATE-POLICY.
+  --since <duration>      Only migrate records newer than this; same syntax as
+                          'omem scan' (e.g. 7d, 2026-01-01).
+  --project <absPath>     Adapter-specific project filter.
+  --session <id>          Restrict to one session id.
+  --dry-run               Default. Compute the plan without writing.
+  --apply                 Actually write to the destination.
+  --i-approve-dest-writes Required with --apply when running non-interactively.
+  --json                  Emit the manifest as JSON instead of a summary line.
+
+EXAMPLES
+  omem migrate --from claude-code --to cursor                      # dry-run
+  omem migrate --from cursor --to codex --apply --i-approve-dest-writes
+`;
+
+const EXPORT_HELP = `omem export - pack adapter storage into a portable archive
+
+USAGE
+  omem export --output <archive.tar.gz> [--all | --from <id>] [--since <duration>]
+              [--json]
+
+DESCRIPTION
+  Walks each detected adapter's storage root and produces a single .tar.gz
+  containing the raw on-disk files plus a top-level 'manifest.json' for
+  provenance. The archive is byte-for-byte restorable with 'omem import'.
+
+  Adapters whose storage roots are missing on disk are skipped silently —
+  reported under 'summary.skippedSources' in the manifest.
+
+OPTIONS
+  --output <path>, -o     Output file path (required).
+  --all                   Default. Export every adapter present on disk.
+  --from <id>             Export a single adapter only.
+  --since <duration>      Only include files modified since this point;
+                          accepts the same syntax as 'omem scan --since'.
+  --json                  Emit the manifest as JSON instead of a summary line.
+
+EXAMPLES
+  omem export --output backup.tar.gz                # back up everything
+  omem export --from cursor -o cursor.tar.gz        # one adapter only
+  omem export -o weekly.tar.gz --since 7d           # last 7 days
+`;
+
+const IMPORT_HELP = `omem import - restore an archive produced by 'omem export'
+
+USAGE
+  omem import <archive.tar.gz>
+              [--dry-run | --apply]
+              [--i-approve-dest-writes]
+              [--on-conflict skip|overwrite]
+              [--home <path>]
+              [--json]
+
+DESCRIPTION
+  Default is dry-run. '--apply' writes the archive's files back into your
+  user home (or the path passed to '--home'). Files already present on disk
+  are skipped unless '--on-conflict overwrite' is given. When stdin is not
+  a TTY (or '--non-interactive' / OMEM_NON_INTERACTIVE=1 is set), '--apply'
+  additionally requires '--i-approve-dest-writes' (or
+  OMEM_I_APPROVE_DEST_WRITES=1) so scripts can never accidentally overwrite
+  memory transcripts.
+
+OPTIONS
+  --dry-run               Default. Show what would be restored without writing.
+  --apply                 Actually write files into the destination home.
+  --i-approve-dest-writes Required with --apply when non-interactive.
+  --on-conflict <p>       skip (default) | overwrite.
+  --home <path>           Destination home root. Default: \$HOME / %USERPROFILE%.
+  --json                  Emit the run manifest as JSON.
+
+EXAMPLES
+  omem import backup.tar.gz                         # dry-run
+  omem import backup.tar.gz --apply --i-approve-dest-writes
+`;
+
+const REMEMBER_HELP = `omem remember <text> - store a memory in the L2 canonical store
+
+USAGE
+  omem remember <text>
+                [--source <id>]
+                [--session <id>]
+                [--role user|assistant|system|tool]
+                [--metadata '<json>']
+                [--timestamp <iso>]
+                [--json]
+
+DESCRIPTION
+  Writes a record into omem's own SQLite + FTS5 store at
+  \${OMEM_HOME:-~/.omem}/canonical.db. The store is created on first use
+  and migrated automatically on subsequent versions.
+
+  Records are deduplicated by content fingerprint (text + timestamp +
+  role + sessionId), so re-running the same command is a no-op.
+
+  After 'remember', 'omem recall <query>' returns canonical hits ranked by
+  BM25 alongside the federated adapter results.
+
+OPTIONS
+  --source <id>           Logical source name. Default: 'omem'.
+  --session <id>          Optional session id (for grouping related memories).
+  --role <r>              user | assistant | system | tool.
+  --metadata <json>       Single JSON object string of extra key/value pairs.
+  --timestamp <iso>       Override the record's timestamp (any Date-parseable string).
+  --json                  Emit the result as JSON.
+
+EXAMPLES
+  omem remember 'always run tests before push'
+  omem remember 'use Bun for new TS projects' --metadata '{"tag":"convention"}'
+  omem remember 'meeting notes …' --session weekly-2026-05-15 --role user
+`;
+
+const UPGRADE_HELP = `omem upgrade - check for and install the latest omem release
+
+USAGE
+  omem upgrade [--check] [--apply] [--json]
+
+DESCRIPTION
+  Looks up the latest published version on the npm registry and reports
+  whether your installation is up to date.
+
+  Without flags: print the comparison + the recommended action for both
+  install paths (npm/bun and prebuilt binary). Exits 0 even if a newer
+  version is available, so this is safe to run from doctor / CI.
+
+  '--check' is the same as the default but never prompts and always exits
+  0 unless the registry lookup fails.
+
+  '--apply' attempts the npm/bun install path automatically. Prebuilt
+  binary users still need to download from the GitHub releases page.
+
+OPTIONS
+  --check     Just check; do not attempt any install. Mutually exclusive
+              with --apply.
+  --apply     Run 'bun install -g oh-my-memories@<latest>' if a newer
+              version is found. Mutually exclusive with --check.
+  --json      Emit the comparison as JSON.
+
+EXAMPLES
+  omem upgrade                # check + print recommended actions
+  omem upgrade --check --json # CI-friendly probe
+  omem upgrade --apply        # bun install -g oh-my-memories@latest
+`;
+
 const MCP_HELP = `omem mcp - run as MCP server, or wire into an IDE
 
 USAGE
@@ -166,6 +338,11 @@ export const HELP_TEXT: Readonly<Record<string, string>> = {
   config: CONFIG_HELP,
   skills: SKILLS_HELP,
   mcp: MCP_HELP,
+  migrate: MIGRATE_HELP,
+  export: EXPORT_HELP,
+  import: IMPORT_HELP,
+  upgrade: UPGRADE_HELP,
+  remember: REMEMBER_HELP,
 };
 
 /**

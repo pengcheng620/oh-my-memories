@@ -4,6 +4,7 @@ import { createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult, writeJsonWarning } from '../output/json';
 import { type TableColumn, renderTable, writeTextError, writeTextWarning } from '../output/table';
 import { parseDuration } from '../parse/duration';
+import { canonicalDbPath } from '../platform/paths';
 import type { CommandContext, CommandHandler } from './types';
 
 export const recall: CommandHandler = async (ctx: CommandContext): Promise<number> => {
@@ -25,12 +26,19 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     else writeTextWarning(ctx, warning);
   }
 
+  // OMEM_HOME_OVERRIDE is a TEST-ONLY hatch (see migrate.ts §): it rebases
+  // adapter storage roots so CLI integration tests can simulate having
+  // ~/.cursor, ~/.codex, etc. inside a temp dir without touching the real
+  // filesystem. In normal use it is undefined.
+  const home = ctx.env.OMEM_HOME_OVERRIDE;
+  const adapterOpts = home !== undefined ? { home } : undefined;
+
   const adapters = args.value.source
     ? (() => {
-        const a = createAdapterById(args.value.source);
+        const a = createAdapterById(args.value.source, adapterOpts);
         return a ? [a] : [];
       })()
-    : createAllAdapters();
+    : createAllAdapters(adapterOpts);
 
   if (adapters.length === 0 && args.value.source) {
     const error = createOmemError({
@@ -47,6 +55,10 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     ...(args.value.source !== undefined ? { sources: [args.value.source] } : {}),
     ...(args.value.limit !== undefined ? { limit: args.value.limit } : {}),
     ...(args.value.sinceMs !== undefined ? { since: new Date(args.value.sinceMs) } : {}),
+    // Always pass the canonical DB path; federation is cold-start safe and
+    // skips the canonical arm when the file is missing. So this just enables
+    // BM25 fusion *if* the user has run `omem remember` at least once.
+    canonicalStorePath: canonicalDbPath({ env: ctx.env }),
   };
   const result = await federatedRecall(adapters, recallOpts);
 
@@ -69,6 +81,7 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
         source: h.record.source,
         id: h.record.id,
         score: Math.round(h.score * 1000) / 1000,
+        origin: h.origin,
         timestamp: h.record.timestamp.toISOString(),
         matchedTerms: h.matchedTerms,
         text: h.record.text,

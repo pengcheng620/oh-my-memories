@@ -87,6 +87,97 @@ export const ERROR_CATALOG = {
     defaultHint:
       'Re-run interactively (drop --non-interactive / unset OMEM_NON_INTERACTIVE), or supply the missing answer via a flag.',
   },
+  'OMEM-E22-MIGRATE-NO-WRITER': {
+    code: 'OMEM-E22-MIGRATE-NO-WRITER',
+    kind: 'error',
+    summary: "The destination adapter passed to 'omem migrate --to' has no write support.",
+    defaultHint:
+      "Pick a writable destination ('claude-code', 'cursor', or 'codex'). 'serena' is read-only in M2.A.",
+  },
+  'OMEM-E23-MIGRATE-FORMAT': {
+    code: 'OMEM-E23-MIGRATE-FORMAT',
+    kind: 'error',
+    summary: 'Destination format validation refused the migration.',
+    defaultHint: "Run 'omem migrate' without '--apply' to inspect the dry-run probe details.",
+  },
+  'OMEM-E24-MIGRATE-POLICY': {
+    code: 'OMEM-E24-MIGRATE-POLICY',
+    kind: 'error',
+    summary: "The chosen '--on-conflict' policy is not supported by the destination adapter.",
+    defaultHint:
+      "Use '--on-conflict=skip-on-conflict' (the default) or pick a destination that supports it.",
+  },
+  'OMEM-E25-MIGRATE-NO-APPROVE': {
+    code: 'OMEM-E25-MIGRATE-NO-APPROVE',
+    kind: 'error',
+    summary:
+      "'omem migrate --apply' refused to write because the run is non-interactive and no explicit approval was given.",
+    defaultHint:
+      "Pass '--i-approve-dest-writes' (or set OMEM_I_APPROVE_DEST_WRITES=1) when scripting a non-interactive apply.",
+  },
+  'OMEM-E26-IMPORT-ARCHIVE': {
+    code: 'OMEM-E26-IMPORT-ARCHIVE',
+    kind: 'error',
+    summary: "'omem import' could not read or extract the supplied archive.",
+    defaultHint:
+      "Verify the path exists and the file is a valid omem export (.tar.gz produced by 'omem export').",
+  },
+  'OMEM-E27-IMPORT-MANIFEST': {
+    code: 'OMEM-E27-IMPORT-MANIFEST',
+    kind: 'error',
+    summary: "'omem import' archive is missing or has an invalid manifest.json.",
+    defaultHint:
+      "Make sure you're importing an archive produced by 'omem export' (current schema: manifestVersion 1, kind 'omem-export').",
+  },
+  'OMEM-E28-IMPORT-NO-APPROVE': {
+    code: 'OMEM-E28-IMPORT-NO-APPROVE',
+    kind: 'error',
+    summary:
+      "'omem import --apply' refused to write because the run is non-interactive and no explicit approval was given.",
+    defaultHint:
+      "Pass '--i-approve-dest-writes' (or set OMEM_I_APPROVE_DEST_WRITES=1) when scripting a non-interactive import.",
+  },
+
+  // ─── 3x: Canonical store / `omem remember` ──────────────────────────────
+  'OMEM-E29-REMEMBER-EMPTY': {
+    code: 'OMEM-E29-REMEMBER-EMPTY',
+    kind: 'error',
+    summary: "'omem remember' was called with empty or whitespace-only text.",
+    defaultHint: "Pass a non-empty text body, e.g. omem remember 'always run tests before push'.",
+  },
+  'OMEM-E30-REMEMBER-METADATA': {
+    code: 'OMEM-E30-REMEMBER-METADATA',
+    kind: 'error',
+    summary: "'omem remember --metadata' was not a valid JSON object.",
+    defaultHint: 'Pass a single JSON object string, e.g. --metadata \'{"tag":"convention"}\'.',
+  },
+  'OMEM-E31-CANONICAL-STORE': {
+    code: 'OMEM-E31-CANONICAL-STORE',
+    kind: 'error',
+    summary: 'A SQLite operation against the canonical store failed.',
+    defaultHint: "Run 'omem doctor' to surface DB health (path, schema version, integrity).",
+  },
+  'OMEM-E32-CANONICAL-SCHEMA': {
+    code: 'OMEM-E32-CANONICAL-SCHEMA',
+    kind: 'error',
+    summary: 'Canonical store migration sequence is broken or a step is missing.',
+    defaultHint:
+      'Re-install omem (the broken migration is shipping with this binary). If this happens after a self-build, ensure the migrations array is dense and ordered.',
+  },
+  'OMEM-E33-CANONICAL-DB-NEWER': {
+    code: 'OMEM-E33-CANONICAL-DB-NEWER',
+    kind: 'error',
+    summary: 'Canonical store schema_version is newer than this omem build understands.',
+    defaultHint: "Run 'omem upgrade --apply' so the binary catches up to the on-disk DB.",
+  },
+  'OMEM-E34-CANONICAL-RUNTIME': {
+    code: 'OMEM-E34-CANONICAL-RUNTIME',
+    kind: 'error',
+    summary:
+      'Canonical store features (omem remember / canonical recall) require the Bun runtime or a Bun-compiled binary.',
+    defaultHint:
+      'Install Bun (https://bun.sh) and re-run, or download a prebuilt omem binary from the GitHub releases page.',
+  },
 
   // ─── Warnings (printed to stderr; exit code unchanged) ───────────────────
   'OMEM-W01-FLAG': {

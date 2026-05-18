@@ -2,27 +2,43 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type {
+  AdapterFormatCapability,
   DetectResult,
   IIdeAdapter,
+  IWritableAdapter,
   MemoryRecord,
+  MigrateContext,
+  PreparedWritePlan,
   ScanOptions,
   ScanResult,
+  WriteBatch,
+  WriteBatchReceipt,
+  WriteProbeResult,
 } from '@oh-my-memories/adapter-sdk';
 import { type ParseStats, parseJsonl } from './parser';
 import { resolveDefaultStorageRoot } from './paths';
+import { CodexWriter } from './writer';
+
+export { CodexWriter } from './writer';
+export type { CodexWriterOptions } from './writer';
 
 export interface CodexAdapterOptions {
   // Override the default ~/.codex/sessions path. Used by tests to point at
   // a tmp fixture root; production callers should pass nothing.
   storageRoot?: string;
+  /** Override the import id (tests). */
+  importId?: string;
+  /** Override the clock used for date partitioning (tests). */
+  clock?: () => Date;
 }
 
-export class CodexAdapter implements IIdeAdapter {
+export class CodexAdapter implements IIdeAdapter, IWritableAdapter {
   readonly id = 'codex';
   readonly category = 'ide' as const;
   readonly displayName = 'OpenAI Codex';
 
   #storageRoot: string;
+  #writer: CodexWriter;
 
   // Set after `scan()` finishes draining. Mirrors the lastScanStats side
   // channel established by Lane A — corrupt-line and timestamp-malformed
@@ -31,6 +47,24 @@ export class CodexAdapter implements IIdeAdapter {
 
   constructor(opts?: CodexAdapterOptions) {
     this.#storageRoot = opts?.storageRoot ?? resolveDefaultStorageRoot();
+    this.#writer = new CodexWriter({
+      storageRoot: this.#storageRoot,
+      ...(opts?.importId !== undefined ? { importId: opts.importId } : {}),
+      ...(opts?.clock !== undefined ? { clock: opts.clock } : {}),
+    });
+  }
+
+  get writeCapability(): AdapterFormatCapability {
+    return this.#writer.writeCapability;
+  }
+  probeWrite(ctx: MigrateContext): Promise<WriteProbeResult> {
+    return this.#writer.probeWrite(ctx);
+  }
+  planWrites(batch: WriteBatch, ctx: MigrateContext): Promise<PreparedWritePlan> {
+    return this.#writer.planWrites(batch, ctx);
+  }
+  writeBatch(batch: WriteBatch, ctx: MigrateContext): Promise<WriteBatchReceipt> {
+    return this.#writer.writeBatch(batch, ctx);
   }
 
   storageRoot(): string {

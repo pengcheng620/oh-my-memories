@@ -16,6 +16,12 @@ export function indexPath(options: ResolveHomeOptions = {}): string {
   return resolve(resolveOmemHome(options), 'index.sqlite');
 }
 
+// Single source of truth for the L2 canonical store location. Used by
+// `omem remember`, `omem recall`, `omem doctor`. Spec: m3 §6.
+export function canonicalDbPath(options: ResolveHomeOptions = {}): string {
+  return resolve(resolveOmemHome(options), 'canonical.db');
+}
+
 export function logsDir(options: ResolveHomeOptions = {}): string {
   return resolve(resolveOmemHome(options), 'logs');
 }

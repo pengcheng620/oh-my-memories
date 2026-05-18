@@ -2,27 +2,41 @@ import { existsSync, statSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type {
+  AdapterFormatCapability,
   DetectResult,
   IIdeAdapter,
+  IWritableAdapter,
   MemoryRecord,
+  MigrateContext,
+  PreparedWritePlan,
   ScanOptions,
   ScanResult,
+  WriteBatch,
+  WriteBatchReceipt,
+  WriteProbeResult,
 } from '@oh-my-memories/adapter-sdk';
 import { type ParseStats, parseJsonl } from './parser';
 import { resolveDefaultStorageRoot } from './paths';
+import { CursorWriter } from './writer';
+
+export { CursorWriter, CURSOR_IMPORT_PROJECT_DIR } from './writer';
+export type { CursorWriterOptions } from './writer';
 
 export interface CursorAdapterOptions {
   // Override the default ~/.cursor/projects path. Used by tests to point at
   // a tmp fixture root; production callers should pass nothing.
   storageRoot?: string;
+  /** Override the import session id. Tests only. */
+  importSessionId?: string;
 }
 
-export class CursorAdapter implements IIdeAdapter {
+export class CursorAdapter implements IIdeAdapter, IWritableAdapter {
   readonly id = 'cursor';
   readonly category = 'ide' as const;
   readonly displayName = 'Cursor';
 
   #storageRoot: string;
+  #writer: CursorWriter;
 
   // Set after `scan()` finishes draining. PLAN.md §2 Lane A DoD requires the
   // corrupt-line counter to be exposed via a side channel; we mirror that here
@@ -31,6 +45,23 @@ export class CursorAdapter implements IIdeAdapter {
 
   constructor(opts?: CursorAdapterOptions) {
     this.#storageRoot = opts?.storageRoot ?? resolveDefaultStorageRoot();
+    this.#writer = new CursorWriter({
+      storageRoot: this.#storageRoot,
+      ...(opts?.importSessionId !== undefined ? { sessionId: opts.importSessionId } : {}),
+    });
+  }
+
+  get writeCapability(): AdapterFormatCapability {
+    return this.#writer.writeCapability;
+  }
+  probeWrite(ctx: MigrateContext): Promise<WriteProbeResult> {
+    return this.#writer.probeWrite(ctx);
+  }
+  planWrites(batch: WriteBatch, ctx: MigrateContext): Promise<PreparedWritePlan> {
+    return this.#writer.planWrites(batch, ctx);
+  }
+  writeBatch(batch: WriteBatch, ctx: MigrateContext): Promise<WriteBatchReceipt> {
+    return this.#writer.writeBatch(batch, ctx);
   }
 
   storageRoot(): string {

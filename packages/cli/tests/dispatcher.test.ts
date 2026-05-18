@@ -63,7 +63,19 @@ describe('dispatcher — discovery', () => {
 });
 
 describe('dispatcher — subcommand-specific help (F3.3)', () => {
-  for (const cmd of ['init', 'scan', 'recall', 'doctor', 'config', 'skills']) {
+  for (const cmd of [
+    'init',
+    'scan',
+    'recall',
+    'doctor',
+    'config',
+    'skills',
+    'migrate',
+    'export',
+    'import',
+    'upgrade',
+    'remember',
+  ]) {
     test(`'omem ${cmd} --help' prints '${cmd}'-specific help`, async () => {
       const { streams, options } = opts();
       const code = await main([cmd, '--help'], options);
@@ -82,18 +94,39 @@ describe('dispatcher — unknown commands', () => {
     expect(streams.stderr.text()).toContain("'nope'");
   });
 
-  test('mentions M2+ for migrate / export / import / remember', async () => {
-    for (const cmd of ['migrate', 'export', 'import', 'remember']) {
-      const { streams, options } = opts();
-      await main([cmd], options);
-      expect(streams.stderr.text()).toContain('M2+');
-    }
+  test('omem remember (bare) returns usage error, not unknown-command', async () => {
+    const { streams, options } = opts();
+    const code = await main(['remember'], options);
+    expect(code).toBe(2);
+    expect(streams.stderr.text()).toContain('OMEM-E01-USAGE');
   });
 
-  test('mentions M1.1+ for upgrade (mcp is now implemented)', async () => {
+  test('omem migrate (bare) returns usage error, not unknown-command', async () => {
     const { streams, options } = opts();
-    await main(['upgrade'], options);
-    expect(streams.stderr.text()).toContain('M1.1+');
+    const code = await main(['migrate'], options);
+    expect(code).toBe(2);
+    expect(streams.stderr.text()).toContain('OMEM-E01-USAGE');
+  });
+
+  test('omem export (bare) returns usage error, not unknown-command', async () => {
+    const { streams, options } = opts();
+    const code = await main(['export'], options);
+    expect(code).toBe(2);
+    expect(streams.stderr.text()).toContain('OMEM-E01-USAGE');
+  });
+
+  test('omem import (bare) returns usage error, not unknown-command', async () => {
+    const { streams, options } = opts();
+    const code = await main(['import'], options);
+    expect(code).toBe(2);
+    expect(streams.stderr.text()).toContain('OMEM-E01-USAGE');
+  });
+
+  test('omem upgrade with a bad arg returns usage error, not unknown-command', async () => {
+    const { streams, options } = opts();
+    const code = await main(['upgrade', 'nope'], options);
+    expect(code).toBe(2);
+    expect(streams.stderr.text()).toContain('OMEM-E01-USAGE');
   });
 
   test('omem mcp (bare) returns usage error, not unknown-command', async () => {

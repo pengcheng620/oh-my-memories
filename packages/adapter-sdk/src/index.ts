@@ -58,6 +58,8 @@ export interface ISaasAdapter extends IBaseAdapter {
 
 export type AnyAdapter = IIdeAdapter | IMcpAdapter | ISaasAdapter;
 
+export * from './write';
+
 export class AdapterError extends Error {
   constructor(
     public readonly code: string,

@@ -60,47 +60,51 @@ Per `research/G-skill-vs-mcp.md`: deferred from M1 until CLI I/O contract was fr
 | Tests: tool execution + installer round-trip + in-memory MCP transport contract | ✅ done — 27 new tests, 323 total passing |
 | Gemini settings.json writer | 🔲 deferred — added when Gemini CLI is in scope |
 
-## M2 — Migration + Backup + Self-update
+## M2 — Migration + Backup + Self-update -- COMPLETE
 
-### M2.A — Migration
-
-| Component | Status |
-|----|----|
-| `IWritableAdapter` interface in `adapter-sdk` | 🔲 |
-| Write-side of CC, Cursor, Codex adapters | 🔲 |
-| `omem migrate --from <a> --to <b> [--dry-run] [--apply]` | 🔲 |
-| Strategies: `skip-on-conflict` (default) / `overwrite` / `newest-wins` | 🔲 |
-| `--dry-run` default, `--apply` to execute (spec §9) | 🔲 |
-| Migration manifest JSON output (spec §9 shape) | 🔲 |
-| Conflict handling with per-record summary | 🔲 |
-
-### M2.B — Backup
+### M2.A — Migration -- COMPLETE
 
 | Component | Status |
 |----|----|
-| `omem export --all` (tar.gz archive of all sources) | 🔲 |
-| `omem import <archive>` (restore from archive) | 🔲 |
-| Manifest inside archive for provenance | 🔲 |
+| `IWritableAdapter` interface in `adapter-sdk` | ✅ done |
+| Write-side of CC, Cursor, Codex adapters | ✅ done |
+| `omem migrate --from <a> --to <b> [--dry-run] [--apply]` | ✅ done |
+| Strategies: `skip-on-conflict` (default) / `overwrite` / `newest-wins` | ✅ done |
+| `--dry-run` default, `--apply` to execute (spec §9) | ✅ done |
+| Migration manifest JSON output (spec §9 shape) | ✅ done — `~/.omem/migrations/<ts>_<id>.json` |
+| Conflict handling with per-record summary | ✅ done |
+| `--i-approve-dest-writes` for non-interactive `--apply` | ✅ done |
 
-### M2.C — Self-update
+### M2.B — Backup -- COMPLETE
 
 | Component | Status |
 |----|----|
-| `omem upgrade` (npm/binary self-update) | 🔲 |
+| `omem export [--all\|--from=<src>...] --output=<archive.tar.gz>` | ✅ done |
+| `omem import <archive>` (restore from archive) | ✅ done — dry-run by default, `--apply` writes |
+| Manifest inside archive for provenance | ✅ done — versioned `manifest.json` w/ omem version, platform, sources, files |
+| Round-trip tests across adapters | ✅ done |
 
-## M3 — Our own engine
+### M2.C — Self-update -- COMPLETE
+
+| Component | Status |
+|----|----|
+| `omem upgrade` (npm registry check + install) | ✅ done — 5s timeout, handles offline gracefully |
+| `omem upgrade --check` (read-only mode) | ✅ done |
+
+## M3 — Our own engine -- COMPLETE
 
 Promotes omem from "federation hub" to "memory home for tools that lack native memory."
 
 | Component | Status |
 |----|----|
-| `packages/core/canonical-store.ts` (SQLite + FTS5 via `better-sqlite3`) | 🔲 |
-| `omem remember <text>` writes to L2 store | 🔲 |
-| Background scan / file-watch incremental indexing | 🔲 |
-| BM25 retrieval (replaces M1 naive scoring) | 🔲 |
-| Optional embedding (`sqlite-vec`); user opts in | 🔲 |
-| Reciprocal Rank Fusion (combines BM25 + vector) | 🔲 |
-| Schema versioning (M3.1+ bumps don't drop data) | 🔲 |
+| `packages/core/canonical-store.ts` (SQLite + FTS5 via `bun:sqlite`) | ✅ done — switched from `better-sqlite3` after FTS5 verified in `bun:sqlite` |
+| `omem remember <text>` writes to L2 store | ✅ done — fingerprint dedup, `--source/--session/--role/--metadata/--timestamp` |
+| BM25 retrieval (replaces M1 naive scoring) | ✅ done — FTS5 `bm25()` ranking with `unicode61 remove_diacritics 2` tokenizer |
+| Reciprocal Rank Fusion (combines BM25 adapter + canonical) | ✅ done — RRF k=60, dedup-by-fingerprint, canonical wins on tie |
+| Schema versioning (M3.1+ bumps don't drop data) | ✅ done — `schema_meta` + migrations under `packages/core/src/migrations/`, throws `OMEM-E33` if DB > binary |
+| Bun runtime gate for canonical store | ✅ done — `OMEM-E34-CANONICAL-RUNTIME` surfaces under Node CJS bundle so adapter-only commands keep working while `remember`/canonical-recall point users at Bun or the prebuilt binary |
+| Background scan / file-watch incremental indexing | 🔲 deferred — manual `omem remember` is enough for M3 acceptance |
+| Optional embedding (`sqlite-vec`); user opts in | 🔲 deferred to M3.1 — gated by user demand |
 
 ## M4 — Adapter SDK as public surface
 

@@ -1,12 +1,17 @@
 import { config } from './commands/config';
 import { doctor } from './commands/doctor';
+import { exportCmd } from './commands/export';
 import { helpFor } from './commands/help';
+import { importCmd } from './commands/import';
 import { init } from './commands/init';
 import { mcp } from './commands/mcp';
+import { migrate } from './commands/migrate';
 import { recall } from './commands/recall';
+import { remember } from './commands/remember';
 import { scan } from './commands/scan';
 import { skills } from './commands/skills';
 import type { CommandContext, CommandHandler } from './commands/types';
+import { upgrade } from './commands/upgrade';
 import { createOmemError } from './output/error';
 import { writeJsonError, writeJsonResult } from './output/json';
 import { writeTextError } from './output/table';
@@ -34,11 +39,16 @@ const COMMANDS: Readonly<Record<string, CommandHandler>> = {
   config,
   skills,
   mcp,
+  migrate,
+  export: exportCmd,
+  import: importCmd,
+  upgrade,
+  remember,
 };
 
-const M2_COMMANDS: ReadonlySet<string> = new Set(['migrate', 'export', 'import', 'remember']);
+const M2_COMMANDS: ReadonlySet<string> = new Set();
 
-const M1_1_COMMANDS: ReadonlySet<string> = new Set(['upgrade']);
+const M1_1_COMMANDS: ReadonlySet<string> = new Set();
 
 export interface MainOptions {
   /** Defaults to process.stdout / .stderr / .env / process.stdin.isTTY. */
