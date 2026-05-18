@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-alpha.2] - 2026-05-18
+
 ### Added
 - **M2.A migration**: `omem migrate --from=<src> --to=<dest>` with dry-run by default, `--apply` to write, conflict policies (`skip-on-conflict`, `overwrite`, `newest-wins`), session filter, and per-run JSON manifest under `~/.omem/migrations/`. Backed by a new `IWritableAdapter` interface in `@oh-my-memories/adapter-sdk` (probeWrite + writeRecord) implemented by Cursor, Codex, and Claude Code adapters.
 - **M2.B portability**: `omem export [--all|--from=<src>...] --output=<archive.tar.gz>` writes a streaming `.tar.gz` archive with a versioned `manifest.json` listing every file. `omem import <archive>` round-trips it back, dry-run by default with `--apply`, conflict policies, and `--target` to redirect destination.
@@ -21,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New tests: 20 in `packages/mcp/tests/{tools,installer,server}.test.ts` (incl. an in-memory MCP transport contract test), 7 in `packages/cli/tests/mcp-cmd.test.ts`, 16 in `packages/core/tests/{migrate,export,import}.test.ts`, 27 in `packages/core/tests/canonical-store.test.ts`, 9 in `packages/cli/tests/remember-cmd.test.ts`, 5 in `packages/cli/tests/recall-cmd.test.ts`, 7 new RRF-fusion tests in `packages/core/tests/federation.test.ts`. Suite total now **455 tests**.
 
 ### Changed
+- `VERSION` bumped from `0.1.0-alpha.1` to `0.1.0-alpha.2`.
 - `omem recall` now always passes `canonicalStorePath` to federation; the canonical arm is automatically engaged when `~/.omem/canonical.db` exists.
 - `omem recall` honours `OMEM_HOME_OVERRIDE` for hermetic CLI integration tests, matching `omem migrate/export/import`.
 - New `canonicalDbPath()` helper in `packages/cli/src/platform/paths.ts` is the single source of truth for `${OMEM_HOME}/canonical.db`. `omem remember` and `omem recall` both use it.

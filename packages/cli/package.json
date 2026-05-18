@@ -1,6 +1,6 @@
 {
   "name": "oh-my-memories",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "omem — manage, federate, and migrate AI memories across all your tools (Claude Code, Cursor, Codex, Serena, ...)",
   "license": "MIT",
   "author": "lup",

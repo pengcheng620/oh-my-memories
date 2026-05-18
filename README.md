@@ -41,12 +41,18 @@ Then: `omem skills install --ide=cursor` writes a `SKILL.md` that teaches Cursor
 3. **Skills** — auto-install thin wrappers that teach Claude Code, Cursor, Codex, and Gemini agents to use omem
 4. **Adapters for**: Claude Code, Cursor, Codex, Serena MCP
 
-## What it will do (M2+)
+## What it does now (M2 + M3)
 
-5. **Migrate** — move memories between tools (`omem migrate --from cc --to cursor`)
-6. **MCP server** — `omem mcp serve` so IDE agents call us as a tool (M1.1)
-7. **More adapters** — basic-memory, Gemini CLI, mem0, Letta, Zep, Cognee
-8. **Our own engine** — for tools without native memory: `omem remember`, vector search
+5. **Migrate** — move memories between tools (`omem migrate --from cc --to cursor --apply`)
+6. **Export / Import** — portable `.tar.gz` backups (`omem export --all --output=backup.tar.gz`)
+7. **Upgrade** — self-update from npm (`omem upgrade`)
+8. **MCP server** — `omem mcp serve` so IDE agents call us as a tool; `omem mcp install --ide=cursor` wires it in
+9. **Canonical store** — `omem remember <text>` writes to a local SQLite+FTS5 engine; `omem recall` fuses BM25 results via Reciprocal Rank Fusion
+
+## What it will do (M4+)
+
+10. **Plugin adapters** — `omem adapter install <name>` installs community adapters from npm (`@omem-adapter/*`)
+11. **More adapters** — basic-memory, Gemini CLI, mem0, Letta, Zep, Cognee
 
 See [`docs/ROADMAP.md`](./docs/ROADMAP.md).
 
@@ -70,6 +76,12 @@ omem skills install --ide=cursor               # or claude / codex / gemini
 
 # (M1.1) wire it as an MCP server too
 omem mcp install --ide=cursor
+
+# (M2) migrate memories between tools
+omem migrate --from=claude-code --to=cursor --dry-run
+
+# (M3) store your own memories
+omem remember "always use bun:sqlite for the canonical store"
 ```
 
 ## Why not just use mem0 / Letta / Zep?
@@ -80,10 +92,11 @@ Read [`docs/PRODUCT.md`](./docs/PRODUCT.md) for the full thesis.
 
 ## Status
 
-**Alpha.** M1 complete (federated read across CC/Cursor/Codex/Serena, 294 tests).
-M0.5 distribution ready: `0.1.0-alpha.1` will ship to npm under the `alpha`
-dist-tag once the release tag is pushed. Use `npm install --tag alpha
-oh-my-memories` to opt in. M1.1 (MCP server) is next.
+**Alpha.** M0.5 → M1 → M1.1 → M2 → M3 complete (455 tests, 0 failures across Ubuntu/macOS/Windows).
+`0.1.0-alpha.2` is the current release: federated read (CC/Cursor/Codex/Serena), MCP server,
+cross-tool migration + backup, canonical SQLite+FTS5 store with BM25/RRF recall, and `omem remember`.
+
+Install: `npm install --tag alpha oh-my-memories` or `bun add -g oh-my-memories@alpha`.
 
 ## Project layout
 
