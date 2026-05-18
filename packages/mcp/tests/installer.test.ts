@@ -64,6 +64,14 @@ describe('installForIde — JSON-based IDEs', () => {
     expect(second.updated).toBe(false);
   });
 
+  it('creates the config file when none exists (gemini)', () => {
+    const result = installForIde({ ide: 'gemini', home });
+    expect(result.created).toBe(true);
+    expect(result.configPath).toBe(resolve(home, '.gemini', 'settings.json'));
+    const parsed = JSON.parse(readFileSync(result.configPath, 'utf8'));
+    expect(parsed.mcpServers['oh-my-memories']).toEqual({ command: 'omem', args: ['mcp', 'serve'] });
+  });
+
   it('rewrites the stanza when overwrite=true', () => {
     installForIde({ ide: 'claude-code', home, command: { command: 'omem-old', args: [] } });
     const result = installForIde({

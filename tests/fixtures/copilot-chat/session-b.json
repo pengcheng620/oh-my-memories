@@ -1,0 +1,10 @@
+{
+  "sessionId": "def-456",
+  "creationDate": "2026-05-08T14:30:00Z",
+  "requests": [
+    {
+      "message": { "text": "Explain React hooks" },
+      "response": [{ "value": "React hooks are functions that let you use state and lifecycle features in functional components." }]
+    }
+  ]
+}

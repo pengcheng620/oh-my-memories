@@ -89,7 +89,7 @@ Every code is **append-only** — never reorder or reuse a number.
 **SYNOPSIS** &nbsp; `omem init [--non-interactive] [--json]`
 
 **DESCRIPTION**
-First-time setup. Detects every supported memory source (Claude Code, Cursor, Codex, Serena),
+First-time setup. Detects every supported memory source (Claude Code, Cursor, Codex, Serena, Gemini CLI, Basic Memory, OpenCode, Aider),
 writes `~/.omem/config.json`, and prompts whether to install thin skills for any IDEs it found.
 The non-interactive path skips prompts and never installs skills.
 
@@ -124,7 +124,7 @@ for agents.
 | Flag | Effect |
 |---|---|
 | `--json` | Emit the JSON schema below. |
-| `--source=<name>` | Restrict to one adapter: `claude-code`, `cursor`, `codex`, `serena`, `gemini-cli`, `basic-memory`, `opencode`. |
+| `--source=<name>` | Restrict to one adapter: `claude-code`, `cursor`, `codex`, `serena`, `gemini-cli`, `basic-memory`, `opencode`, `aider`, `copilot-chat`. |
 | `--since=<duration>` | Only count records newer than this; e.g. `7d`, `2026-01-01`. |
 
 **JSON schema (success)**
@@ -270,7 +270,29 @@ omem skills install --ide claude-code
 ## Commands (M1.1+)
 
 ### `omem mcp serve` / `omem mcp install --ide=<ide>`
-M1.1 — start an MCP server on stdio, or wire `omem` into an IDE's `mcp.json`.
+
+**SYNOPSIS**
+```text
+omem mcp serve
+omem mcp install --ide=<ide>
+omem mcp uninstall --ide=<ide>
+```
+
+**DESCRIPTION**
+`serve` starts an MCP server on stdio (tools: `omem_recall`, `omem_scan`).
+`install` registers `omem mcp serve` in the IDE's config file. `uninstall` reverses it.
+
+Supported IDEs: `claude-code` (`~/.claude.json`), `cursor` (`~/.cursor/mcp.json`),
+`codex` (`~/.codex/config.toml`), `gemini` (`~/.gemini/settings.json`).
+
+**EXAMPLES**
+```bash
+omem mcp install --ide=cursor
+omem mcp install --ide=gemini
+omem mcp uninstall --ide=claude-code
+```
+
+**EXIT CODES**: `0` success · `1` IO error · `2` bad args.
 
 ## Commands (M2)
 
@@ -531,8 +553,8 @@ omem adapter list [--json]
 ```
 
 **DESCRIPTION**
-Lists all loaded adapters: the four built-in adapters (claude-code, cursor, codex, serena)
-plus any plugins installed via `omem adapter install`. Plugin warnings and load errors are
+Lists all loaded adapters: the nine built-in adapters (claude-code, cursor, codex, serena,
+gemini-cli, basic-memory, opencode, aider, copilot-chat) plus any plugins installed via `omem adapter install`. Plugin warnings and load errors are
 printed to stderr.
 
 **JSON SCHEMA**
@@ -634,3 +656,28 @@ or `--deduplicate` must be provided.
 **ERROR CODES**: `OMEM-E34-CANONICAL-RUNTIME` (if Bun runtime not available).
 
 **EXIT CODES**: `0` success · `1` runtime error · `2` bad args.
+
+## Commands (M6)
+
+### `omem watch`
+
+**SYNOPSIS**
+```text
+omem watch [--json]
+```
+
+**DESCRIPTION**
+Foreground file watcher. Detects all adapter storage roots, starts watching
+them for changes (recursive `fs.watch`), and auto-rescans when files change.
+A 1.5s debounce collapses rapid filesystem events. Runs until Ctrl-C (SIGINT).
+
+In `--json` mode, emits structured events: `started` (with watched paths),
+`rescan` (with record counts), and `error`.
+
+**EXAMPLES**
+```bash
+omem watch                # watch all sources, human-friendly output
+omem watch --json         # watch with structured JSON events on stdout
+```
+
+**EXIT CODES**: `0` clean shutdown · `1` watcher setup failed · `3` no sources detected.

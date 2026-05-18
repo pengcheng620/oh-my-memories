@@ -1,7 +1,9 @@
 import { join } from 'node:path';
+import { AiderAdapter } from '@oh-my-memories/adapter-aider';
 import { BasicMemoryAdapter } from '@oh-my-memories/adapter-basic-memory';
 import { ClaudeCodeAdapter } from '@oh-my-memories/adapter-claude-code';
 import { CodexAdapter } from '@oh-my-memories/adapter-codex';
+import { CopilotChatAdapter } from '@oh-my-memories/adapter-copilot-chat';
 import { CursorAdapter } from '@oh-my-memories/adapter-cursor';
 import { GeminiCliAdapter } from '@oh-my-memories/adapter-gemini-cli';
 import { OpenCodeAdapter } from '@oh-my-memories/adapter-opencode';
@@ -38,6 +40,8 @@ function builtinAdapters(opts?: CreateAdapterOptions): AnyAdapter[] {
     new GeminiCliAdapter(geminiCliOpts(opts?.home)),
     new OpenCodeAdapter(openCodeOpts(opts?.home)),
     new BasicMemoryAdapter(basicMemoryOpts(opts?.home)),
+    new AiderAdapter(aiderOpts(opts?.home)),
+    new CopilotChatAdapter(copilotChatOpts(opts?.home)),
     new SerenaAdapter({ projectRoot: cwd }),
   ];
 }
@@ -63,6 +67,10 @@ export function createAdapterById(id: string, opts?: CreateAdapterOptions): AnyA
       return new OpenCodeAdapter(openCodeOpts(opts?.home));
     case 'basic-memory':
       return new BasicMemoryAdapter(basicMemoryOpts(opts?.home));
+    case 'aider':
+      return new AiderAdapter(aiderOpts(opts?.home));
+    case 'copilot-chat':
+      return new CopilotChatAdapter(copilotChatOpts(opts?.home));
     case 'serena':
       return new SerenaAdapter({ projectRoot: cwd });
     default:
@@ -70,7 +78,7 @@ export function createAdapterById(id: string, opts?: CreateAdapterOptions): AnyA
   }
 }
 
-export const ALL_ADAPTER_IDS = ['claude-code', 'cursor', 'codex', 'gemini-cli', 'opencode', 'basic-memory', 'serena'] as const;
+export const ALL_ADAPTER_IDS = ['claude-code', 'cursor', 'codex', 'gemini-cli', 'opencode', 'basic-memory', 'aider', 'copilot-chat', 'serena'] as const;
 
 export interface LoadAdapterOptions extends CreateAdapterOptions {
   /** Pass to loadPlugins for test isolation (OMEM_HOME override). */
@@ -174,4 +182,14 @@ function openCodeOpts(home: string | undefined): { storageRoot?: string } | unde
 function basicMemoryOpts(home: string | undefined): { storageRoot?: string } | undefined {
   if (home === undefined) return undefined;
   return { storageRoot: join(home, 'basic-memory') };
+}
+
+function aiderOpts(home: string | undefined): { storageRoot?: string } | undefined {
+  if (home === undefined) return undefined;
+  return { storageRoot: home };
+}
+
+function copilotChatOpts(home: string | undefined): { dataDirs?: string[] } | undefined {
+  if (home === undefined) return undefined;
+  return { dataDirs: [join(home, 'Code', 'User')] };
 }

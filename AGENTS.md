@@ -66,6 +66,8 @@ Our own           oh-my-memories (omem)                  L2: SQLite + FTS5
 | `packages/adapters/gemini-cli/`  | Read `~/.gemini/tmp/<hash>/chats/*.jsonl` |
 | `packages/adapters/basic-memory/`| Read `~/basic-memory/**/*.md` (Markdown + YAML frontmatter) |
 | `packages/adapters/opencode/`    | Read `~/.local/share/opencode/` session JSON files |
+| `packages/adapters/aider/`       | Read `.aider.chat.history.md` per-project Markdown files |
+| `packages/adapters/copilot-chat/`| Read VS Code `workspaceStorage/*/chatSessions/*.jsonl` |
 | `packages/adapters/_shared/`     | Common JSONL parser, denylist, path utils |
 
 **Skills** (`skills/<ide>/SKILL.md`) are thin wrappers that teach each IDE's agent **when** to call `omem` and **with what flags**. They are not the product — they are the on-ramp.
@@ -101,10 +103,10 @@ If you find yourself wanting to change one of those decisions, **read the verdic
 
 ## 6. Current Status
 
-- **Completed milestones**: M0.5 (distribution), M1 (inventory + federation), M1.1 (MCP server), M2 (migration + backup + self-update), M3 (canonical SQLite+FTS5 store), M4 (adapter SDK 1.0.0 + plugin ecosystem), M5 (3 new adapters + stats/prune/adapter-search)
-- **Test suite**: 500+ tests, 0 failures across Ubuntu/macOS/Windows
-- **Version**: `0.1.0-alpha.4`
-- **Next**: M6 (team/shared memory, web UI, cross-machine sync)
+- **Completed milestones**: M0.5 (distribution), M1 (inventory + federation), M1.1 (MCP server), M2 (migration + backup + self-update), M3 (canonical SQLite+FTS5 store), M4 (adapter SDK 1.0.0 + plugin ecosystem), M5 (3 new adapters + stats/prune/adapter-search), M6 (Aider + Copilot Chat adapters, Gemini MCP install, `omem watch`)
+- **Test suite**: 432 pass, 2 known failures (pre-existing import round-trip)
+- **Version**: `0.1.0-beta.1`
+- **Next**: M7 (semantic search, provenance)
 - **Branch**: `main`
 - **Remote**: `https://github.com/pengcheng620/oh-my-memories`
 - **Roadmap**: see `docs/ROADMAP.md`

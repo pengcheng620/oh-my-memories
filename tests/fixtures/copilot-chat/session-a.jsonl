@@ -1,0 +1,3 @@
+{"kind":0,"sessionId":"abc-123","creationDate":"2026-05-10T10:00:00Z","customTitle":"JWT auth discussion","requests":[{"message":{"text":"How do I implement JWT refresh tokens?"},"response":[{"value":"Here's how to implement JWT refresh tokens:\n\n1. Store the refresh token securely\n2. Use short-lived access tokens (15 min)\n3. Rotate refresh tokens on each use"}]}]}
+{"kind":1,"key":"customTitle","value":"JWT auth patterns"}
+{"kind":2,"key":"requests","value":{"message":{"text":"Show me the code for token rotation"},"response":[{"value":"```typescript\nasync function rotateToken(refreshToken: string) {\n  // verify and rotate\n}\n```"}]}}

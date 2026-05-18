@@ -1,0 +1,10 @@
+{
+  "name": "@oh-my-memories/adapter-aider",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@oh-my-memories/adapter-sdk": "workspace:*"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "oh-my-memories",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-beta.1",
   "description": "omem — manage, federate, and migrate AI memories across all your tools (Claude Code, Cursor, Codex, Serena, ...)",
   "license": "MIT",
   "author": "lup",
@@ -48,9 +48,11 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@oh-my-memories/adapter-aider": "workspace:*",
     "@oh-my-memories/adapter-basic-memory": "workspace:*",
     "@oh-my-memories/adapter-claude-code": "workspace:*",
     "@oh-my-memories/adapter-codex": "workspace:*",
+    "@oh-my-memories/adapter-copilot-chat": "workspace:*",
     "@oh-my-memories/adapter-cursor": "workspace:*",
     "@oh-my-memories/adapter-gemini-cli": "workspace:*",
     "@oh-my-memories/adapter-opencode": "workspace:*",

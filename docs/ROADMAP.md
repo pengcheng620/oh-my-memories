@@ -58,7 +58,7 @@ Per `research/G-skill-vs-mcp.md`: deferred from M1 until CLI I/O contract was fr
 | Per-IDE config writers (`~/.claude.json`, `~/.cursor/mcp.json`, `~/.codex/config.toml`) | ✅ done |
 | `omem mcp uninstall --ide=<ide>` (reverse the above) | ✅ done |
 | Tests: tool execution + installer round-trip + in-memory MCP transport contract | ✅ done — 27 new tests, 323 total passing |
-| Gemini settings.json writer | 🔲 deferred — added when Gemini CLI is in scope |
+| Gemini settings.json writer (`~/.gemini/settings.json`) | ✅ done (M6) |
 
 ## M2 — Migration + Backup + Self-update -- COMPLETE
 
@@ -135,7 +135,21 @@ First milestone focused on ecosystem growth and production hardening rather than
 | Adapter realism review (all 7 adapters verified against real formats) | ✅ done |
 | Publish `v0.1.0-alpha.4` to npm | 🔲 |
 
-## M6+ — Future bets
+## M6 — "Wider + Fresher"
+
+Wider adapter coverage for the next-most-popular tools + auto-sync so the MCP story is seamless.
+
+| Component | Status |
+|----|-----|
+| Aider adapter (Cat A) — `.aider.chat.history.md` per-project Markdown | ✅ done |
+| Copilot Chat adapter (Cat A) — VS Code `workspaceStorage/<id>/chatSessions/*.jsonl` | ✅ done |
+| `omem mcp install --ide=gemini` — Gemini settings.json writer (deferred from M1.1) | ✅ done |
+| `omem watch` — foreground file watcher, auto-rescan on source file change | ✅ done |
+| Publish `v0.1.0-beta.1` | 🔲 |
+
+Windsurf/Codeium skipped: no viable local storage format (cloud-only, no export API as of 2026-05).
+
+## M7+ — Future bets
 
 - **Semantic search**: optional `sqlite-vec` embedding + RRF fusion with BM25
 - **Memory provenance**: "show why" tracing (which source, which session, when)
@@ -143,4 +157,4 @@ First milestone focused on ecosystem growth and production hardening rather than
 - **Web UI**: browser-based memory explorer
 - **Cross-machine sync**: replicate canonical store across devices
 - **mem0 / Letta / Zep / Cognee Cat C adapters**: SaaS memory engine integration
-- **Memory pruning policies**: configurable retention rules (age, dedup, size limits)
+- **Windsurf adapter**: blocked until Codeium ships local session export

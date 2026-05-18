@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-beta.1] - 2026-05-18
+
+### Added
+- **M6 Aider adapter** (Cat A): parses `.aider.chat.history.md` Markdown files from any project directory. Extracts user/assistant turns with timestamps from `#### ...` header blocks. Recursive project scanning.
+- **M6 Copilot Chat adapter** (Cat A): reads VS Code `workspaceStorage/<id>/chatSessions/*.jsonl` operation logs. Reconstructs full session state via JSONL mutation replay (kind=0 base, 1=set, 2=push, 3=delete). Also supports legacy `.json` session files. Platform-aware storage resolution (Windows/macOS/Linux).
+- **M6 `omem mcp install --ide=gemini`**: writes MCP server config to `~/.gemini/settings.json`, completing IDE wiring for all four supported hosts (Claude Code, Cursor, Codex, Gemini).
+- **M6 `omem watch`**: foreground file watcher that monitors all detected adapter storage roots via `fs.watch` (recursive). 1.5s debounce for rapid filesystem events. Auto-rescans and reports summary on change. JSON event output with `--json`. Clean shutdown on SIGINT/SIGTERM.
+- `docs/CLI.md` updated with `omem watch` section.
+
+### Changed
+- `VERSION` bumped to `0.1.0-beta.1` (first beta — all M1–M6 features complete).
+- Built-in adapter count: 7 → 9 (added aider, copilot-chat).
+- MCP install IDE support: 3 → 4 (added gemini).
+- `README.md`, `AGENTS.md`, `ADAPTER-SDK.md`, `ROADMAP.md`, `CLI.md` updated for M6 scope.
+
+### Fixed
+- Adapter realism review fixes from M5 carried forward (Basic Memory `type` field, OpenCode storage path).
+- Suite total now **432 tests** (2 pre-existing import round-trip failures, all new tests pass).
+
 ## [0.1.0-alpha.4] - 2026-05-18
 
 ### Added

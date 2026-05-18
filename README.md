@@ -1,9 +1,9 @@
 # oh-my-memories
 
 > **Manage, federate, and migrate AI memories across all your tools.**
-> Claude Code, Cursor, Codex, Gemini CLI, Copilot, Serena, mem0 — one CLI, one query, every memory.
+> Claude Code, Cursor, Codex, Gemini CLI, Aider, Copilot Chat, Serena, mem0 — one CLI, one query, every memory.
 
-[![status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange)]()
+[![status: beta](https://img.shields.io/badge/status-beta-yellow)]()
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)]()
 
 ---
@@ -27,6 +27,8 @@ $ omem scan --json | jq '.sources[].name'
 "gemini-cli"
 "basic-memory"
 "opencode"
+"aider"
+"copilot-chat"
 $ omem recall "JWT refresh flow" --json | jq '.hits | length'
 16
 ```
@@ -42,24 +44,25 @@ Then: `omem skills install --ide=cursor` writes a `SKILL.md` that teaches Cursor
 1. **Inventory** — scan and list every memory source on your machine
 2. **Recall** — federated search across all of them via one CLI call (BM25 + Reciprocal Rank Fusion)
 3. **Skills** — auto-install thin wrappers that teach Claude Code, Cursor, Codex, and Gemini agents to use omem
-4. **Adapters** — built-in for Claude Code, Cursor, Codex, Serena MCP, Gemini CLI, Basic Memory, OpenCode
+4. **Adapters** — built-in for Claude Code, Cursor, Codex, Serena MCP, Gemini CLI, Basic Memory, OpenCode, Aider, Copilot Chat
 5. **Migrate** — move memories between tools (`omem migrate --from cc --to cursor --apply`)
 6. **Export / Import** — portable `.tar.gz` backups (`omem export --all --output=backup.tar.gz`)
 7. **Upgrade** — self-update from npm (`omem upgrade`)
-8. **MCP server** — `omem mcp serve` so IDE agents call us as a tool; `omem mcp install --ide=cursor` wires it in
+8. **MCP server** — `omem mcp serve` so IDE agents call us as a tool; `omem mcp install --ide=cursor` wires it in (supports Claude Code, Cursor, Codex, Gemini)
 9. **Canonical store** — `omem remember <text>` writes to a local SQLite+FTS5 engine; `omem recall` fuses canonical + adapter results
 10. **Plugin ecosystem** — `omem adapter install <name>` installs community adapters from npm (`@omem-adapter/*`); adapter SDK is stable at 1.0.0
 11. **Stats** — `omem stats` shows per-source record counts and health at a glance
 12. **Prune** — `omem prune --older-than 90d --deduplicate` cleans up the canonical store
+13. **Watch** — `omem watch` monitors source files and auto-rescans on change
 
-## What's next (M6+)
+## What's next (M7+)
 
+- Semantic search (`sqlite-vec` embeddings + RRF)
+- Memory provenance / "show why" tracing
 - Team / shared memory store (server mode)
 - Web UI for browsing memories
 - Cross-machine sync
-- More adapters — mem0, Letta, Zep, Cognee, Copilot
-- Memory provenance / "show why" tracing
-- Optional vector search (`sqlite-vec`)
+- mem0 / Letta / Zep / Cognee Cat C adapters
 
 See [`docs/ROADMAP.md`](./docs/ROADMAP.md) for the full history and future bets.
 
@@ -99,6 +102,9 @@ omem adapter uninstall my-tool                   # remove a plugin
 omem stats                                       # per-source record counts
 omem prune --older-than 90d --deduplicate        # clean up canonical store
 omem adapter search                              # find adapters on npm
+
+# (M6) auto-rescan on source file change
+omem watch                                       # foreground watcher (Ctrl-C to stop)
 ```
 
 ## Why not just use mem0 / Letta / Zep?
@@ -109,12 +115,13 @@ Read [`docs/PRODUCT.md`](./docs/PRODUCT.md) for the full thesis.
 
 ## Status
 
-**Alpha.** M0.5 through M5 complete (500+ tests, 0 failures across Ubuntu/macOS/Windows).
-`0.1.0-alpha.4` is the current release: 7 built-in adapters (CC/Cursor/Codex/Serena/Gemini CLI/Basic Memory/OpenCode),
-MCP server, cross-tool migration + backup, canonical SQLite+FTS5 store with BM25/RRF recall,
-`omem remember`, plugin ecosystem (`omem adapter install/list/uninstall/search`), `omem stats`, and `omem prune`.
+**Beta.** M0.5 through M6 complete (432 tests pass, 2 known pre-existing failures).
+`0.1.0-beta.1` is the current release: 9 built-in adapters (CC/Cursor/Codex/Serena/Gemini CLI/Basic Memory/OpenCode/Aider/Copilot Chat),
+MCP server (supports Claude Code, Cursor, Codex, Gemini), cross-tool migration + backup,
+canonical SQLite+FTS5 store with BM25/RRF recall, `omem remember`, plugin ecosystem
+(`omem adapter install/list/uninstall/search`), `omem stats`, `omem prune`, and `omem watch`.
 
-Install: `npm install -g oh-my-memories@alpha` or `bun add -g oh-my-memories@alpha`.
+Install: `npm install -g oh-my-memories@beta` or `bun add -g oh-my-memories@beta`.
 
 ## Project layout
 
@@ -124,7 +131,7 @@ oh-my-memories/
 ├── packages/core/        — storage engine (SQLite+FTS5) + retrieval + federation
 ├── packages/mcp/         — MCP server (omem_recall + omem_scan tools)
 ├── packages/adapter-sdk/ — adapter interface (1.0.0 stable)
-├── packages/adapters/    — built-in adapters (CC, Cursor, Codex, Serena, Gemini CLI, Basic Memory, OpenCode)
+├── packages/adapters/    — built-in adapters (CC, Cursor, Codex, Serena, Gemini CLI, Basic Memory, OpenCode, Aider, Copilot Chat)
 ├── skills/               — IDE-specific SKILL.md packs
 ├── docs/                 — humans read this
 ├── specs/                — design decisions live here

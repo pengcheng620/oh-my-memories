@@ -1,0 +1,3 @@
+{"kind":0,"sessionId":"bad-session","creationDate":"2026-05-01T00:00:00Z","requests":[{"message":{"text":"Hello"},"response":[{"value":"Hi there"}]}]}
+{this is not valid json
+{"kind":2,"key":"requests","value":{"message":{"text":"second message"},"response":[{"value":"response to second"}]}}

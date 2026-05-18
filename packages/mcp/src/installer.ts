@@ -14,7 +14,7 @@ import { dirname, isAbsolute, resolve } from 'node:path';
 // Comments in TOML are preserved by treating the file as text and only editing
 // the [mcp_servers.oh-my-memories] block.
 
-export const SUPPORTED_IDES = ['claude-code', 'cursor', 'codex'] as const;
+export const SUPPORTED_IDES = ['claude-code', 'cursor', 'codex', 'gemini'] as const;
 export type SupportedIde = (typeof SUPPORTED_IDES)[number];
 
 export interface InstallTarget {
@@ -55,6 +55,7 @@ export function detectIde(env: NodeJS.ProcessEnv = process.env): SupportedIde | 
   if (env.CURSOR_TRACE_ID !== undefined || env.CURSOR_USER !== undefined) return 'cursor';
   if (env.CLAUDE_CODE_VERSION !== undefined || env.ANTHROPIC_HOSTED === '1') return 'claude-code';
   if (env.CODEX_HOME !== undefined) return 'codex';
+  if (env.GEMINI_API_KEY !== undefined) return 'gemini';
   return null;
 }
 
@@ -81,6 +82,7 @@ export function installForIde(opts: InstallOptions): InstallResult {
   switch (opts.ide) {
     case 'claude-code':
     case 'cursor':
+    case 'gemini':
       return installJsonServer(opts.ide, target, command, opts.overwrite ?? false, 'mcpServers');
     case 'codex':
       return installCodexToml(target, command, opts.overwrite ?? false);
@@ -97,6 +99,7 @@ export function uninstallForIde(opts: { ide: SupportedIde; home?: string }): Uni
   switch (opts.ide) {
     case 'claude-code':
     case 'cursor':
+    case 'gemini':
       return uninstallJsonServer(opts.ide, target, 'mcpServers');
     case 'codex':
       return uninstallCodexToml(opts.ide, target);
@@ -124,6 +127,11 @@ function targetFor(ide: SupportedIde, home: string): InstallTarget {
       return {
         configPath: resolve(home, '.codex', 'config.toml'),
         stanzaPath: `mcp_servers.${SERVER_KEY}`,
+      };
+    case 'gemini':
+      return {
+        configPath: resolve(home, '.gemini', 'settings.json'),
+        stanzaPath: `mcpServers.${SERVER_KEY}`,
       };
   }
 }

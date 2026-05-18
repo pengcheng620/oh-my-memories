@@ -15,6 +15,7 @@ import { skills } from './commands/skills';
 import { stats } from './commands/stats';
 import type { CommandContext, CommandHandler } from './commands/types';
 import { upgrade } from './commands/upgrade';
+import { watch } from './commands/watch';
 import { createOmemError } from './output/error';
 import { writeJsonError, writeJsonResult } from './output/json';
 import { writeTextError } from './output/table';
@@ -50,6 +51,7 @@ const COMMANDS: Readonly<Record<string, CommandHandler>> = {
   remember,
   stats,
   prune,
+  watch,
 };
 
 const M2_COMMANDS: ReadonlySet<string> = new Set();

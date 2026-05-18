@@ -9,7 +9,7 @@ import type { CommandContext, CommandHandler } from './types';
 // Implementation is dynamically imported so the heavyweight MCP SDK is only
 // loaded when these subcommands actually run; `omem scan` etc stay fast.
 
-const SUPPORTED_IDES = ['claude-code', 'cursor', 'codex'] as const;
+const SUPPORTED_IDES = ['claude-code', 'cursor', 'codex', 'gemini'] as const;
 type SupportedIde = (typeof SUPPORTED_IDES)[number];
 
 export const mcp: CommandHandler = async (ctx: CommandContext): Promise<number> => {
