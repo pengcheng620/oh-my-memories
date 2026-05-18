@@ -117,11 +117,27 @@ Promotes omem from "federation hub" to "memory home for tools that lack native m
 | Author guide live at `docs/ADAPTER-SDK.md` | ✅ |
 | New error codes OMEM-E40..E44, OMEM-W02 | ✅ |
 
-## M5+ — Future bets
+## M5 — Community adapters + polish
 
-- Team / shared memory store (server mode)
-- Web UI for browsing memories
-- Cross-machine sync
-- mem0 / Letta / Zep / Cognee Cat C adapters
-- Memory provenance / "show why" tracing
-- Memory pruning policies
+First milestone focused on ecosystem growth and production hardening rather than new engine features.
+
+| Component | Status |
+|----|----|
+| Gemini CLI adapter (Cat A) | 🔲 |
+| basic-memory adapter (Cat B) | 🔲 |
+| OpenCode adapter (Cat A — `~/.local/share/opencode/`) | 🔲 |
+| `omem adapter search` — query npm registry for `@omem-adapter/*` packages | 🔲 |
+| `omem stats` — show total records, per-source counts, last scan time | 🔲 |
+| `omem prune` — remove old/duplicate records from canonical store | 🔲 |
+| Fix 9 pre-existing typecheck errors in test files | 🔲 |
+| Publish `v0.1.0-alpha.3` to npm + verify `npx oh-my-memories` from fresh machine | 🔲 |
+
+## M6+ — Future bets
+
+- **Semantic search**: optional `sqlite-vec` embedding + RRF fusion with BM25
+- **Memory provenance**: "show why" tracing (which source, which session, when)
+- **Team / shared memory store**: server mode for team recall
+- **Web UI**: browser-based memory explorer
+- **Cross-machine sync**: replicate canonical store across devices
+- **mem0 / Letta / Zep / Cognee Cat C adapters**: SaaS memory engine integration
+- **Memory pruning policies**: configurable retention rules (age, dedup, size limits)

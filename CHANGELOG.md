@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(No changes yet.)
+### Added
+- E2E test for adapter install roundtrip: install → list → uninstall → verify removal (`tests/e2e/adapter.e2e.test.ts`, 5 new tests). Suite total now **483 tests**.
+- `.cursor/rules/release-checklist.mdc`: pre-release documentation currency and quality checklist.
+- M5 roadmap plan in `docs/ROADMAP.md`.
 
 ## [0.1.0-alpha.3] - 2026-05-18
 
