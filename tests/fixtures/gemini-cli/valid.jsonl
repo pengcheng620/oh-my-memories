@@ -1,0 +1,6 @@
+{"type":"session_metadata","sessionId":"abc123","projectHash":"hash1","startTime":"2026-05-01T10:00:00Z"}
+{"type":"user","id":"msg-1","timestamp":"2026-05-01T10:00:01Z","content":[{"type":"text","text":"How do I set up JWT refresh tokens?"}]}
+{"type":"gemini","id":"msg-2","timestamp":"2026-05-01T10:00:05Z","content":[{"type":"text","text":"Here's how to implement JWT refresh tokens..."}]}
+{"type":"message_update","id":"msg-2","tokens":{"input":50,"output":200}}
+{"type":"user","id":"msg-3","timestamp":"2026-05-01T10:01:00Z","content":[{"type":"text","text":"Can you show the rotation strategy?"}]}
+{"type":"gemini","id":"msg-4","timestamp":"2026-05-01T10:01:10Z","content":[{"type":"text","text":"Sure, here is a token rotation approach..."}]}

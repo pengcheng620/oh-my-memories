@@ -117,20 +117,23 @@ Promotes omem from "federation hub" to "memory home for tools that lack native m
 | Author guide live at `docs/ADAPTER-SDK.md` | ✅ |
 | New error codes OMEM-E40..E44, OMEM-W02 | ✅ |
 
-## M5 — Community adapters + polish
+## M5 — Community adapters + polish -- COMPLETE
 
 First milestone focused on ecosystem growth and production hardening rather than new engine features.
 
 | Component | Status |
 |----|----|
-| Gemini CLI adapter (Cat A) | 🔲 |
-| basic-memory adapter (Cat B) | 🔲 |
-| OpenCode adapter (Cat A — `~/.local/share/opencode/`) | 🔲 |
-| `omem adapter search` — query npm registry for `@omem-adapter/*` packages | 🔲 |
-| `omem stats` — show total records, per-source counts, last scan time | 🔲 |
-| `omem prune` — remove old/duplicate records from canonical store | 🔲 |
-| Fix 9 pre-existing typecheck errors in test files | 🔲 |
-| Publish `v0.1.0-alpha.3` to npm + verify `npx oh-my-memories` from fresh machine | 🔲 |
+| Gemini CLI adapter (Cat A) — `~/.gemini/tmp/<hash>/chats/*.jsonl` | ✅ done |
+| basic-memory adapter (Cat B) — `~/basic-memory/**/*.md` | ✅ done |
+| OpenCode adapter (Cat A) — `~/.local/share/opencode/` sessions | ✅ done |
+| `omem adapter search` — query npm registry for `@omem-adapter/*` packages | ✅ done |
+| `omem stats` — show total records, per-source counts, corrupt lines | ✅ done |
+| `omem prune` — remove old/duplicate records from canonical store | ✅ done |
+| New error code OMEM-E45-SEARCH-FAILED | ✅ done |
+| docs/CLI.md updated with stats, prune, adapter search sections | ✅ done |
+| Fix pre-existing typecheck errors in test files | ✅ done |
+| Adapter realism review (all 7 adapters verified against real formats) | ✅ done |
+| Publish `v0.1.0-alpha.4` to npm | 🔲 |
 
 ## M6+ — Future bets
 

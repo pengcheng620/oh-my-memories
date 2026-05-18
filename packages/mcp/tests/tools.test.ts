@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import type {
-  AnyAdapter,
   DetectResult,
+  IIdeAdapter,
   MemoryRecord,
   ScanOptions,
-  ScanResult,
 } from '@oh-my-memories/adapter-sdk';
 import { executeRecall } from '../src/tools/recall';
 import { executeScan } from '../src/tools/scan';
@@ -13,12 +12,13 @@ import { executeScan } from '../src/tools/scan';
 // from the McpServer wiring. The server boundary is contract-tested separately
 // via the in-memory MCP transport.
 
-class FakeAdapter implements AnyAdapter {
+class FakeAdapter implements IIdeAdapter {
   readonly id: string;
   readonly category = 'ide' as const;
   readonly displayName: string;
   private readonly records: MemoryRecord[];
   private readonly _detect: DetectResult;
+  private readonly _storageRoot: string;
 
   constructor(
     id: string,
@@ -29,11 +29,16 @@ class FakeAdapter implements AnyAdapter {
     this.id = id;
     this.displayName = displayName;
     this.records = records;
+    this._storageRoot = `/fake/${id}`;
     this._detect = {
       present: true,
-      storageRoot: `/fake/${id}`,
+      storageRoot: this._storageRoot,
       ...detect,
     };
+  }
+
+  storageRoot(): string {
+    return this._storageRoot;
   }
 
   async detect(): Promise<DetectResult> {
@@ -42,10 +47,6 @@ class FakeAdapter implements AnyAdapter {
 
   async *scan(_opts?: ScanOptions): AsyncIterable<MemoryRecord> {
     for (const r of this.records) yield r;
-  }
-
-  async scanAndCount(_opts?: ScanOptions): Promise<ScanResult> {
-    return { records: this.records.length, denylistedFiles: 0 };
   }
 }
 

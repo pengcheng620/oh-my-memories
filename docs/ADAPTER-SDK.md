@@ -20,7 +20,7 @@ The adapter does NOT:
 | `mcp` | The source is a local MCP memory server with on-disk storage we can read | `IMcpAdapter` |
 | `saas` | The source is a remote SaaS service requiring API calls | `ISaasAdapter` |
 
-Cat C (saas) is harder: rate limits, auth, network failures. M1 only has Cat A and B built in. We accept Cat C contributions in M2+.
+Cat C (saas) is harder: rate limits, auth, network failures. Built-in adapters cover Cat A (Claude Code, Cursor, Codex, Gemini CLI, OpenCode) and Cat B (Serena, Basic Memory). We accept Cat C contributions in M2+.
 
 ## Minimal Cat A (IDE) adapter
 

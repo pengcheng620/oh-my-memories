@@ -92,7 +92,7 @@ export const ERROR_CATALOG = {
     kind: 'error',
     summary: "The destination adapter passed to 'omem migrate --to' has no write support.",
     defaultHint:
-      "Pick a writable destination ('claude-code', 'cursor', or 'codex'). 'serena' is read-only in M2.A.",
+      "Pick a writable destination ('claude-code', 'cursor', or 'codex'). 'gemini-cli', 'opencode', 'basic-memory', and 'serena' are read-only.",
   },
   'OMEM-E23-MIGRATE-FORMAT': {
     code: 'OMEM-E23-MIGRATE-FORMAT',
@@ -193,14 +193,14 @@ export const ERROR_CATALOG = {
     kind: 'error',
     summary: 'Neither bun nor npm could be found in PATH to install the adapter plugin.',
     defaultHint:
-      "Install Bun (https://bun.sh) or Node.js/npm and ensure the binary is on your PATH, then retry.",
+      'Install Bun (https://bun.sh) or Node.js/npm and ensure the binary is on your PATH, then retry.',
   },
   'OMEM-E41-PLUGIN-INSTALL-FAILED': {
     code: 'OMEM-E41-PLUGIN-INSTALL-FAILED',
     kind: 'error',
     summary: 'The package manager command to install the adapter plugin returned a non-zero exit.',
     defaultHint:
-      "Check the output above for details, or run with --verbose. The package may not exist on npm or may have a bad package.json.",
+      'Check the output above for details, or run with --verbose. The package may not exist on npm or may have a bad package.json.',
   },
   'OMEM-E42-PLUGIN-LOAD-FAILED': {
     code: 'OMEM-E42-PLUGIN-LOAD-FAILED',
@@ -221,6 +221,13 @@ export const ERROR_CATALOG = {
     summary: 'Removing the installed adapter plugin directory failed.',
     defaultHint:
       'Check file permissions on ~/.omem/node_modules/, or manually delete the directory.',
+  },
+
+  'OMEM-E45-SEARCH-FAILED': {
+    code: 'OMEM-E45-SEARCH-FAILED',
+    kind: 'error',
+    summary: 'Searching the npm registry for adapter packages failed.',
+    defaultHint: 'Check your network connection and try again.',
   },
 
   'OMEM-W02-PLUGIN-ID-COLLISION': {

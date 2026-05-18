@@ -24,6 +24,9 @@ $ omem scan --json | jq '.sources[].name'
 "cursor"
 "codex"
 "serena"
+"gemini-cli"
+"basic-memory"
+"opencode"
 $ omem recall "JWT refresh flow" --json | jq '.hits | length'
 16
 ```
@@ -39,20 +42,22 @@ Then: `omem skills install --ide=cursor` writes a `SKILL.md` that teaches Cursor
 1. **Inventory** — scan and list every memory source on your machine
 2. **Recall** — federated search across all of them via one CLI call (BM25 + Reciprocal Rank Fusion)
 3. **Skills** — auto-install thin wrappers that teach Claude Code, Cursor, Codex, and Gemini agents to use omem
-4. **Adapters** — built-in for Claude Code, Cursor, Codex, Serena MCP
+4. **Adapters** — built-in for Claude Code, Cursor, Codex, Serena MCP, Gemini CLI, Basic Memory, OpenCode
 5. **Migrate** — move memories between tools (`omem migrate --from cc --to cursor --apply`)
 6. **Export / Import** — portable `.tar.gz` backups (`omem export --all --output=backup.tar.gz`)
 7. **Upgrade** — self-update from npm (`omem upgrade`)
 8. **MCP server** — `omem mcp serve` so IDE agents call us as a tool; `omem mcp install --ide=cursor` wires it in
 9. **Canonical store** — `omem remember <text>` writes to a local SQLite+FTS5 engine; `omem recall` fuses canonical + adapter results
 10. **Plugin ecosystem** — `omem adapter install <name>` installs community adapters from npm (`@omem-adapter/*`); adapter SDK is stable at 1.0.0
+11. **Stats** — `omem stats` shows per-source record counts and health at a glance
+12. **Prune** — `omem prune --older-than 90d --deduplicate` cleans up the canonical store
 
-## What's next (M5+)
+## What's next (M6+)
 
 - Team / shared memory store (server mode)
 - Web UI for browsing memories
 - Cross-machine sync
-- More adapters — basic-memory, Gemini CLI, mem0, Letta, Zep, Cognee
+- More adapters — mem0, Letta, Zep, Cognee, Copilot
 - Memory provenance / "show why" tracing
 - Optional vector search (`sqlite-vec`)
 
@@ -89,6 +94,11 @@ omem remember "always use bun:sqlite for the canonical store"
 omem adapter list                                # show built-in + installed
 omem adapter install @omem-adapter/my-tool       # install from npm
 omem adapter uninstall my-tool                   # remove a plugin
+
+# (M5) stats & maintenance
+omem stats                                       # per-source record counts
+omem prune --older-than 90d --deduplicate        # clean up canonical store
+omem adapter search                              # find adapters on npm
 ```
 
 ## Why not just use mem0 / Letta / Zep?
@@ -99,12 +109,12 @@ Read [`docs/PRODUCT.md`](./docs/PRODUCT.md) for the full thesis.
 
 ## Status
 
-**Alpha.** M0.5 through M4 complete (478 tests, 0 failures across Ubuntu/macOS/Windows).
-`0.1.0-alpha.3` is the current release: federated read (CC/Cursor/Codex/Serena), MCP server,
-cross-tool migration + backup, canonical SQLite+FTS5 store with BM25/RRF recall, `omem remember`,
-and plugin ecosystem (`omem adapter install/list/uninstall` with `@omem-adapter/*` npm scope).
+**Alpha.** M0.5 through M5 complete (500+ tests, 0 failures across Ubuntu/macOS/Windows).
+`0.1.0-alpha.4` is the current release: 7 built-in adapters (CC/Cursor/Codex/Serena/Gemini CLI/Basic Memory/OpenCode),
+MCP server, cross-tool migration + backup, canonical SQLite+FTS5 store with BM25/RRF recall,
+`omem remember`, plugin ecosystem (`omem adapter install/list/uninstall/search`), `omem stats`, and `omem prune`.
 
-Install: `npm install --tag alpha oh-my-memories` or `bun add -g oh-my-memories@alpha`.
+Install: `npm install -g oh-my-memories@alpha` or `bun add -g oh-my-memories@alpha`.
 
 ## Project layout
 
@@ -114,7 +124,7 @@ oh-my-memories/
 ├── packages/core/        — storage engine (SQLite+FTS5) + retrieval + federation
 ├── packages/mcp/         — MCP server (omem_recall + omem_scan tools)
 ├── packages/adapter-sdk/ — adapter interface (1.0.0 stable)
-├── packages/adapters/    — built-in adapters (CC, Cursor, Codex, Serena)
+├── packages/adapters/    — built-in adapters (CC, Cursor, Codex, Serena, Gemini CLI, Basic Memory, OpenCode)
 ├── skills/               — IDE-specific SKILL.md packs
 ├── docs/                 — humans read this
 ├── specs/                — design decisions live here

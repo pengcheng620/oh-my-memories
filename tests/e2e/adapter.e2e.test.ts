@@ -1,6 +1,6 @@
-import { mkdir, writeFile, access, rm } from 'node:fs/promises';
-import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { access, mkdir, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { main } from '../../packages/cli/src/index';
 
 class MemoryStream {
@@ -70,14 +70,8 @@ async function simulateInstall(): Promise<void> {
   const pkgDir = join(omemHome, 'node_modules', '@omem-adapter', 'e2e-test');
   await mkdir(pkgDir, { recursive: true });
   const { readFile } = await import('node:fs/promises');
-  await writeFile(
-    join(pkgDir, 'package.json'),
-    await readFile(join(fixtureDir, 'package.json')),
-  );
-  await writeFile(
-    join(pkgDir, 'index.js'),
-    await readFile(join(fixtureDir, 'index.js')),
-  );
+  await writeFile(join(pkgDir, 'package.json'), await readFile(join(fixtureDir, 'package.json')));
+  await writeFile(join(pkgDir, 'index.js'), await readFile(join(fixtureDir, 'index.js')));
 }
 
 describe('e2e: adapter install → list → uninstall roundtrip', () => {
@@ -110,14 +104,14 @@ describe('e2e: adapter install → list → uninstall roundtrip', () => {
       };
       const plugin = result.adapters.find((a) => a.id === 'e2e-test');
       expect(plugin).toBeDefined();
-      expect(plugin!.builtin).toBe(false);
-      expect(plugin!.version).toBe('0.42.0');
-      expect(plugin!.category).toBe('ide');
+      expect(plugin?.builtin).toBe(false);
+      expect(plugin?.version).toBe('0.42.0');
+      expect(plugin?.category).toBe('ide');
     }
 
     // uninstall the plugin
     {
-      const { stdout, stderr, options } = opts();
+      const { stdout, options } = opts();
       const code = await main(['adapter', 'uninstall', 'e2e-test'], options);
       expect(code).toBe(0);
       const out = stdout.text();

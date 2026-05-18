@@ -79,6 +79,7 @@ Every code is **append-only** — never reorder or reuse a number.
 | `OMEM-E42-PLUGIN-LOAD-FAILED` | error | An installed adapter plugin could not be loaded (bad export or import error). |
 | `OMEM-E43-PLUGIN-NOT-FOUND` | error | No installed plugin with the given adapter ID was found. |
 | `OMEM-E44-PLUGIN-UNINSTALL-FAILED` | error | Removing the installed adapter plugin directory failed. |
+| `OMEM-E45-SEARCH-FAILED` | error | Searching the npm registry for adapter packages failed. |
 | `OMEM-W02-PLUGIN-ID-COLLISION` | warning | Two installed plugins advertise the same adapter ID; the first one wins. |
 
 ## Commands (M1)
@@ -123,7 +124,7 @@ for agents.
 | Flag | Effect |
 |---|---|
 | `--json` | Emit the JSON schema below. |
-| `--source=<name>` | Restrict to one adapter: `claude-code`, `cursor`, `codex`, `serena`. |
+| `--source=<name>` | Restrict to one adapter: `claude-code`, `cursor`, `codex`, `serena`, `gemini-cli`, `basic-memory`, `opencode`. |
 | `--since=<duration>` | Only count records newer than this; e.g. `7d`, `2026-01-01`. |
 
 **JSON schema (success)**
@@ -580,3 +581,56 @@ Removes an installed plugin by adapter ID or full package name.
 **ERROR CODES**: `OMEM-E43-PLUGIN-NOT-FOUND`, `OMEM-E44-PLUGIN-UNINSTALL-FAILED`.
 
 **EXIT CODES**: `0` success · `1` uninstall failed · `2` bad args.
+
+#### `omem adapter search`
+
+**SYNOPSIS**
+```text
+omem adapter search [query] [--json]
+```
+
+**DESCRIPTION**
+Searches the npm registry for `@omem-adapter/*` packages. If no query is given,
+lists all published packages.
+
+**ERROR CODES**: `OMEM-E45-SEARCH-FAILED` (if npm registry is unreachable).
+
+**EXIT CODES**: `0` success · `1` search failed.
+
+---
+
+### `omem stats`
+
+**SYNOPSIS**
+```text
+omem stats [--json]
+```
+
+**DESCRIPTION**
+Scans all detected adapters and reports aggregate statistics: total record count,
+per-source counts, corrupt lines, and presence status.
+
+**EXIT CODES**: `0` success.
+
+---
+
+### `omem prune`
+
+**SYNOPSIS**
+```text
+omem prune [--older-than <duration>] [--deduplicate] [--json]
+```
+
+**DESCRIPTION**
+Removes records from the canonical SQLite store. At least one of `--older-than`
+or `--deduplicate` must be provided.
+
+| Flag | Purpose |
+|------|---------|
+| `--older-than <duration>` | Remove records older than this (e.g. `90d`, `2025-01-01`). |
+| `--deduplicate` | Remove duplicate records, keeping the newest per fingerprint. |
+| `--json` | Emit structured result as JSON. |
+
+**ERROR CODES**: `OMEM-E34-CANONICAL-RUNTIME` (if Bun runtime not available).
+
+**EXIT CODES**: `0` success · `1` runtime error · `2` bad args.

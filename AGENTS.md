@@ -63,6 +63,9 @@ Our own           oh-my-memories (omem)                  L2: SQLite + FTS5
 | `packages/adapters/cursor/`      | Read `~/.cursor/projects/*/agent-transcripts/*.jsonl` |
 | `packages/adapters/codex/`       | Read `~/.codex/sessions/*.jsonl` |
 | `packages/adapters/serena/`      | Read project-local `.serena/memories/*.md` |
+| `packages/adapters/gemini-cli/`  | Read `~/.gemini/tmp/<hash>/chats/*.jsonl` |
+| `packages/adapters/basic-memory/`| Read `~/basic-memory/**/*.md` (Markdown + YAML frontmatter) |
+| `packages/adapters/opencode/`    | Read `~/.local/share/opencode/` session JSON files |
 | `packages/adapters/_shared/`     | Common JSONL parser, denylist, path utils |
 
 **Skills** (`skills/<ide>/SKILL.md`) are thin wrappers that teach each IDE's agent **when** to call `omem` and **with what flags**. They are not the product — they are the on-ramp.
@@ -98,10 +101,10 @@ If you find yourself wanting to change one of those decisions, **read the verdic
 
 ## 6. Current Status
 
-- **Completed milestones**: M0.5 (distribution), M1 (inventory + federation), M1.1 (MCP server), M2 (migration + backup + self-update), M3 (canonical SQLite+FTS5 store), M4 (adapter SDK 1.0.0 + plugin ecosystem)
-- **Test suite**: 478 tests, 0 failures across Ubuntu/macOS/Windows
-- **Version**: `0.1.0-alpha.3`
-- **Next**: M5 (team/shared memory, web UI, cross-machine sync)
+- **Completed milestones**: M0.5 (distribution), M1 (inventory + federation), M1.1 (MCP server), M2 (migration + backup + self-update), M3 (canonical SQLite+FTS5 store), M4 (adapter SDK 1.0.0 + plugin ecosystem), M5 (3 new adapters + stats/prune/adapter-search)
+- **Test suite**: 500+ tests, 0 failures across Ubuntu/macOS/Windows
+- **Version**: `0.1.0-alpha.4`
+- **Next**: M6 (team/shared memory, web UI, cross-machine sync)
 - **Branch**: `main`
 - **Remote**: `https://github.com/pengcheng620/oh-my-memories`
 - **Roadmap**: see `docs/ROADMAP.md`

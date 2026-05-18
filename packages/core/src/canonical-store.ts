@@ -121,6 +121,16 @@ export interface CanonicalScanOptions {
   readonly limit?: number;
 }
 
+export interface PruneOptions {
+  readonly olderThan?: Date;
+  readonly deduplicate?: boolean;
+}
+
+export interface PruneResult {
+  readonly deleted: number;
+  readonly remaining: number;
+}
+
 export class CanonicalStore {
   private readonly db: SqliteDatabase;
   private readonly readonly: boolean;
@@ -269,6 +279,48 @@ export class CanonicalStore {
   count(): number {
     const row = this.db.query('SELECT COUNT(*) AS n FROM memories').get() as { n: number };
     return row.n;
+  }
+
+  /**
+   * Remove records older than `olderThan`, or remove duplicate fingerprints
+   * (keeping the newest). Returns the number of records deleted.
+   */
+  prune(opts: PruneOptions): PruneResult {
+    if (this.readonly) {
+      throw new Error('CanonicalStore opened readonly; cannot prune()');
+    }
+
+    let deleted = 0;
+
+    if (opts.olderThan !== undefined) {
+      const cutoffMs = opts.olderThan.getTime();
+      const row = this.db
+        .query('SELECT COUNT(*) AS n FROM memories WHERE timestamp_ms < ?')
+        .get(cutoffMs) as { n: number };
+      deleted += row.n;
+      this.db.run('DELETE FROM memories WHERE timestamp_ms < ?', [cutoffMs]);
+    }
+
+    if (opts.deduplicate) {
+      const dupeRow = this.db
+        .query(
+          `SELECT COUNT(*) AS n FROM memories
+           WHERE mem_pk NOT IN (
+             SELECT MAX(mem_pk) FROM memories GROUP BY fingerprint
+           )`,
+        )
+        .get() as { n: number };
+      deleted += dupeRow.n;
+      this.db.run(
+        `DELETE FROM memories
+         WHERE mem_pk NOT IN (
+           SELECT MAX(mem_pk) FROM memories GROUP BY fingerprint
+         )`,
+      );
+    }
+
+    const remaining = this.count();
+    return { deleted, remaining };
   }
 
   close(): void {

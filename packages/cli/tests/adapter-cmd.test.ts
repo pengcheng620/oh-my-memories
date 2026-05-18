@@ -1,8 +1,7 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { main } from '../src/index';
 
 // CLI-level tests for `omem adapter` subcommands.
@@ -65,7 +64,9 @@ describe('omem adapter list', () => {
     const { streams, options } = opts();
     const code = await main(['adapter', 'list', '--json'], options);
     expect(code).toBe(0);
-    const result = JSON.parse(streams.stdout.text()) as { adapters: Array<{ id: string; builtin: boolean }> };
+    const result = JSON.parse(streams.stdout.text()) as {
+      adapters: Array<{ id: string; builtin: boolean }>;
+    };
     expect(result.adapters.length).toBeGreaterThanOrEqual(4);
     const builtinIds = result.adapters.filter((a) => a.builtin).map((a) => a.id);
     expect(builtinIds).toContain('claude-code');
@@ -77,7 +78,9 @@ describe('omem adapter list', () => {
   test('marks built-ins as builtin=true', async () => {
     const { streams, options } = opts();
     await main(['adapter', 'list', '--json'], options);
-    const result = JSON.parse(streams.stdout.text()) as { adapters: Array<{ id: string; builtin: boolean }> };
+    const result = JSON.parse(streams.stdout.text()) as {
+      adapters: Array<{ id: string; builtin: boolean }>;
+    };
     for (const a of result.adapters) {
       if (['claude-code', 'cursor', 'codex', 'serena'].includes(a.id)) {
         expect(a.builtin).toBe(true);
@@ -102,7 +105,7 @@ describe('omem adapter install — argument validation', () => {
   });
 
   test('flag passed as package spec returns exit 2', async () => {
-    const { streams, options } = opts();
+    const { options } = opts();
     const code = await main(['adapter', 'install', '--json'], options);
     expect(code).toBe(2);
   });

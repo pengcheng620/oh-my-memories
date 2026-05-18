@@ -19,9 +19,9 @@ export const scan: CommandHandler = async (ctx: CommandContext): Promise<number>
         // Fast-path: try builtin first, then async plugin search.
         const builtin = createAdapterById(args.value.source);
         if (builtin) return Promise.resolve([builtin]);
-        return loadAdapterById(args.value.source, { env: ctx.env }).then((a) => (a ? [a] : []));
+        return loadAdapterById(args.value.source).then((a) => (a ? [a] : []));
       })()
-    : loadAllAdapters({ env: ctx.env });
+    : loadAllAdapters();
 
   const resolvedAdapters = await adapters;
   if (resolvedAdapters.length === 0) {

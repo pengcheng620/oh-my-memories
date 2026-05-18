@@ -37,11 +37,9 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     ? (() => {
         const builtin = createAdapterById(args.value.source, adapterOpts);
         if (builtin) return Promise.resolve([builtin]);
-        return loadAdapterById(args.value.source, { home: adapterOpts?.home, env: ctx.env }).then(
-          (a) => (a ? [a] : []),
-        );
+        return loadAdapterById(args.value.source, adapterOpts).then((a) => (a ? [a] : []));
       })()
-    : loadAllAdapters({ home: adapterOpts?.home, env: ctx.env });
+    : loadAllAdapters(adapterOpts);
 
   const resolvedAdapters = await adapters;
 

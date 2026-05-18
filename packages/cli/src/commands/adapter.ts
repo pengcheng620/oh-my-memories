@@ -10,6 +10,7 @@ import type { CommandContext, CommandHandler } from './types';
 //
 // Subcommands:
 //   list                           Show all loaded adapters (built-ins + plugins)
+//   search [query]                 Search npm for @omem-adapter/* packages
 //   install <packageSpec>          Install a plugin from npm or a local path
 //   uninstall <adapterIdOrPkg>     Remove an installed plugin by adapter ID or
 //                                  package name (@omem-adapter/<name>)
@@ -20,6 +21,9 @@ export const adapter: CommandHandler = async (ctx: CommandContext): Promise<numb
   if (sub === 'list' || sub === undefined) {
     return runList(ctx);
   }
+  if (sub === 'search') {
+    return runSearch(ctx, rest);
+  }
   if (sub === 'install') {
     return runInstall(ctx, rest);
   }
@@ -29,12 +33,83 @@ export const adapter: CommandHandler = async (ctx: CommandContext): Promise<numb
 
   const err = createOmemError({
     code: 'OMEM-E01-USAGE',
-    message: `Unknown adapter subcommand '${sub}'. Use: list | install | uninstall`,
+    message: `Unknown adapter subcommand '${sub}'. Use: list | search | install | uninstall`,
   });
   if (ctx.flags.json) writeJsonError(ctx, err);
   else writeTextError(ctx, err);
   return 2;
 };
+
+interface NpmSearchResult {
+  name: string;
+  version: string;
+  description: string;
+}
+
+async function runSearch(ctx: CommandContext, args: string[]): Promise<number> {
+  const query = args.filter((a) => !a.startsWith('-')).join(' ');
+
+  ctx.stderr.write(`Searching npm for @omem-adapter/ packages…\n`);
+
+  try {
+    const url = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(`@omem-adapter/${query}`)}&size=20`;
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      const err = createOmemError({
+        code: 'OMEM-E45-SEARCH-FAILED',
+        message: `npm search failed: HTTP ${resp.status}`,
+      });
+      if (ctx.flags.json) writeJsonError(ctx, err);
+      else writeTextError(ctx, err);
+      return 1;
+    }
+
+    const data = (await resp.json()) as { objects?: Array<{ package: NpmSearchResult }> };
+    const packages: NpmSearchResult[] = (data.objects ?? []).map((o) => o.package);
+
+    if (ctx.flags.json) {
+      writeJsonResult(ctx, { command: 'adapter search', query, packages });
+    } else {
+      if (packages.length === 0) {
+        ctx.stdout.write('No @omem-adapter/* packages found on npm.\n');
+      } else {
+        ctx.stdout.write(formatSearchResults(packages));
+      }
+    }
+    return 0;
+  } catch (e) {
+    const err = createOmemError({
+      code: 'OMEM-E45-SEARCH-FAILED',
+      message: `npm search failed: ${e instanceof Error ? e.message : String(e)}`,
+    });
+    if (ctx.flags.json) writeJsonError(ctx, err);
+    else writeTextError(ctx, err);
+    return 1;
+  }
+}
+
+function formatSearchResults(packages: NpmSearchResult[]): string {
+  const nameWidth = Math.max(4, ...packages.map((p) => p.name.length));
+  const verWidth = Math.max(7, ...packages.map((p) => p.version.length));
+
+  const header = [
+    'NAME'.padEnd(nameWidth),
+    'VERSION'.padEnd(verWidth),
+    'DESCRIPTION',
+  ].join('  ');
+
+  const sep = '-'.repeat(header.length);
+
+  const lines = packages.map((p) =>
+    [
+      p.name.padEnd(nameWidth),
+      p.version.padEnd(verWidth),
+      p.description || '',
+    ].join('  '),
+  );
+
+  return [header, sep, ...lines, '', `Install with: omem adapter install <name>`, ''].join('\n');
+}
 
 async function runList(ctx: CommandContext): Promise<number> {
   const warnings: string[] = [];
@@ -153,7 +228,7 @@ function adapterSummary(a: AnyAdapter) {
   };
 }
 
-const BUILTIN_IDS = new Set(['claude-code', 'cursor', 'codex', 'serena']);
+const BUILTIN_IDS = new Set(['claude-code', 'cursor', 'codex', 'gemini-cli', 'opencode', 'basic-memory', 'serena']);
 function isBuiltin(id: string): boolean {
   return BUILTIN_IDS.has(id);
 }

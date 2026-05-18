@@ -9,8 +9,10 @@ import { mcp } from './commands/mcp';
 import { migrate } from './commands/migrate';
 import { recall } from './commands/recall';
 import { remember } from './commands/remember';
+import { prune } from './commands/prune';
 import { scan } from './commands/scan';
 import { skills } from './commands/skills';
+import { stats } from './commands/stats';
 import type { CommandContext, CommandHandler } from './commands/types';
 import { upgrade } from './commands/upgrade';
 import { createOmemError } from './output/error';
@@ -46,6 +48,8 @@ const COMMANDS: Readonly<Record<string, CommandHandler>> = {
   import: importCmd,
   upgrade,
   remember,
+  stats,
+  prune,
 };
 
 const M2_COMMANDS: ReadonlySet<string> = new Set();

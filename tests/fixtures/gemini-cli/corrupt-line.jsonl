@@ -1,0 +1,4 @@
+{"type":"session_metadata","sessionId":"corrupt-test","projectHash":"hash2","startTime":"2026-05-01T10:00:00Z"}
+{"type":"user","id":"msg-1","timestamp":"2026-05-01T10:00:01Z","content":[{"type":"text","text":"Valid line before corrupt"}]}
+{this is not valid json at all
+{"type":"gemini","id":"msg-2","timestamp":"2026-05-01T10:00:05Z","content":[{"type":"text","text":"Valid line after corrupt"}]}

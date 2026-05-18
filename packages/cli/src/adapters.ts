@@ -1,7 +1,10 @@
 import { join } from 'node:path';
+import { BasicMemoryAdapter } from '@oh-my-memories/adapter-basic-memory';
 import { ClaudeCodeAdapter } from '@oh-my-memories/adapter-claude-code';
 import { CodexAdapter } from '@oh-my-memories/adapter-codex';
 import { CursorAdapter } from '@oh-my-memories/adapter-cursor';
+import { GeminiCliAdapter } from '@oh-my-memories/adapter-gemini-cli';
+import { OpenCodeAdapter } from '@oh-my-memories/adapter-opencode';
 import type { AnyAdapter } from '@oh-my-memories/adapter-sdk';
 import { SerenaAdapter } from '@oh-my-memories/adapter-serena';
 import type { ResolveHomeOptions } from './platform/home';
@@ -32,6 +35,9 @@ function builtinAdapters(opts?: CreateAdapterOptions): AnyAdapter[] {
     new ClaudeCodeAdapter(claudeCodeOpts(opts?.home)),
     new CursorAdapter(cursorOpts(opts?.home)),
     new CodexAdapter(codexOpts(opts?.home)),
+    new GeminiCliAdapter(geminiCliOpts(opts?.home)),
+    new OpenCodeAdapter(openCodeOpts(opts?.home)),
+    new BasicMemoryAdapter(basicMemoryOpts(opts?.home)),
     new SerenaAdapter({ projectRoot: cwd }),
   ];
 }
@@ -51,6 +57,12 @@ export function createAdapterById(id: string, opts?: CreateAdapterOptions): AnyA
       return new CursorAdapter(cursorOpts(opts?.home));
     case 'codex':
       return new CodexAdapter(codexOpts(opts?.home));
+    case 'gemini-cli':
+      return new GeminiCliAdapter(geminiCliOpts(opts?.home));
+    case 'opencode':
+      return new OpenCodeAdapter(openCodeOpts(opts?.home));
+    case 'basic-memory':
+      return new BasicMemoryAdapter(basicMemoryOpts(opts?.home));
     case 'serena':
       return new SerenaAdapter({ projectRoot: cwd });
     default:
@@ -58,7 +70,7 @@ export function createAdapterById(id: string, opts?: CreateAdapterOptions): AnyA
   }
 }
 
-export const ALL_ADAPTER_IDS = ['claude-code', 'cursor', 'codex', 'serena'] as const;
+export const ALL_ADAPTER_IDS = ['claude-code', 'cursor', 'codex', 'gemini-cli', 'opencode', 'basic-memory', 'serena'] as const;
 
 export interface LoadAdapterOptions extends CreateAdapterOptions {
   /** Pass to loadPlugins for test isolation (OMEM_HOME override). */
@@ -144,4 +156,22 @@ function cursorOpts(home: string | undefined): { storageRoot?: string } | undefi
 function codexOpts(home: string | undefined): { storageRoot?: string } | undefined {
   if (home === undefined) return undefined;
   return { storageRoot: join(home, '.codex', 'sessions') };
+}
+
+function geminiCliOpts(home: string | undefined): { storageRoot?: string } | undefined {
+  if (home === undefined) return undefined;
+  return { storageRoot: join(home, '.gemini') };
+}
+
+function openCodeOpts(home: string | undefined): { storageRoot?: string } | undefined {
+  if (home === undefined) return undefined;
+  const dataHome = process.platform === 'win32'
+    ? join(home, 'AppData', 'Local')
+    : join(home, '.local', 'share');
+  return { storageRoot: join(dataHome, 'opencode') };
+}
+
+function basicMemoryOpts(home: string | undefined): { storageRoot?: string } | undefined {
+  if (home === undefined) return undefined;
+  return { storageRoot: join(home, 'basic-memory') };
 }

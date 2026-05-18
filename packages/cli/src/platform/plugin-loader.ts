@@ -26,19 +26,21 @@ function isBaseAdapter(value: unknown): value is IBaseAdapter {
   if (value === null || typeof value !== 'object') return false;
   const a = value as Record<string, unknown>;
   return (
-    typeof a['id'] === 'string' &&
-    a['id'].length > 0 &&
-    typeof a['category'] === 'string' &&
-    typeof a['displayName'] === 'string' &&
-    typeof a['detect'] === 'function' &&
-    typeof a['scan'] === 'function'
+    typeof a.id === 'string' &&
+    a.id.length > 0 &&
+    typeof a.category === 'string' &&
+    typeof a.displayName === 'string' &&
+    typeof a.detect === 'function' &&
+    typeof a.scan === 'function'
   );
 }
 
 function wrapIfSyncIterable(adapter: IBaseAdapter): IBaseAdapter {
   const originalScan = adapter.scan.bind(adapter);
   return Object.assign(Object.create(Object.getPrototypeOf(adapter)) as object, adapter, {
-    scan(opts?: Parameters<IBaseAdapter['scan']>[0]): AsyncIterable<ReturnType<typeof originalScan> extends AsyncIterable<infer T> ? T : never> {
+    scan(
+      opts?: Parameters<IBaseAdapter['scan']>[0],
+    ): AsyncIterable<ReturnType<typeof originalScan> extends AsyncIterable<infer T> ? T : never> {
       const result = originalScan(opts);
       // If scan returned a plain Iterable (not AsyncIterable), wrap it.
       if (
@@ -48,7 +50,7 @@ function wrapIfSyncIterable(adapter: IBaseAdapter): IBaseAdapter {
         !(Symbol.asyncIterator in result)
       ) {
         async function* wrap() {
-          for (const item of result as Iterable<unknown>) {
+          for (const item of result as unknown as Iterable<unknown>) {
             yield item;
           }
         }
@@ -86,14 +88,14 @@ export async function loadPlugins(options: ResolveHomeOptions = {}): Promise<Plu
         const pkgJson = JSON.parse(
           await import('node:fs').then((fs) => fs.readFileSync(pkgJsonPath, 'utf8')),
         ) as Record<string, unknown>;
-        if (typeof pkgJson['main'] === 'string') mainEntry = pkgJson['main'];
-        else if (typeof pkgJson['exports'] === 'string') mainEntry = pkgJson['exports'];
+        if (typeof pkgJson.main === 'string') mainEntry = pkgJson.main;
+        else if (typeof pkgJson.exports === 'string') mainEntry = pkgJson.exports;
       } catch {
         // No package.json or unparseable — fall back to index.js.
       }
       const entryPath = join(pkgDir, mainEntry);
       const module = (await import(pathToFileURL(entryPath).href)) as Record<string, unknown>;
-      exported = module['default'] ?? module;
+      exported = module.default ?? module;
     } catch (err) {
       result.errors.push({
         code: 'OMEM-E42-PLUGIN-LOAD-FAILED',

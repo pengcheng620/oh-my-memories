@@ -83,7 +83,7 @@ When relevant, the agent should call:
 **For this repo specifically**, the agent should also lean on:
 - `framework-docs-researcher` — when wiring a new dependency (Bun / Biome / @modelcontextprotocol/sdk / better-sqlite3)
 - `code-simplifier` — after large changes, to delete cleverness
-- `pattern-recognition-specialist` — when adding a 5th+ adapter, to enforce parity with the first 4
+- `pattern-recognition-specialist` — when adding an 8th+ adapter, to enforce parity with the first 7
 
 ---
 

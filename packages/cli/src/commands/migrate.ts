@@ -37,7 +37,7 @@ export const migrate: CommandHandler = async (ctx: CommandContext): Promise<numb
   }
 
   const adapterOpts = adapterFactoryOptions(ctx);
-  const source = await loadAdapterById(args.value.from, { ...adapterOpts, env: ctx.env });
+  const source = await loadAdapterById(args.value.from, adapterOpts);
   if (source === undefined) {
     return reject(
       ctx,
@@ -47,7 +47,7 @@ export const migrate: CommandHandler = async (ctx: CommandContext): Promise<numb
       }),
     );
   }
-  const destination = await loadAdapterById(args.value.to, { ...adapterOpts, env: ctx.env });
+  const destination = await loadAdapterById(args.value.to, adapterOpts);
   if (destination === undefined) {
     return reject(
       ctx,

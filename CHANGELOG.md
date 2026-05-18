@@ -7,10 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-alpha.4] - 2026-05-18
+
 ### Added
-- E2E test for adapter install roundtrip: install → list → uninstall → verify removal (`tests/e2e/adapter.e2e.test.ts`, 5 new tests). Suite total now **483 tests**.
+- **M5 Gemini CLI adapter** (Cat A): reads `~/.gemini/tmp/<hash>/chats/*.jsonl` session files and `GEMINI.md`, using shared `streamJsonl` + `extractTextBlocks` from `@oh-my-memories/adapter-shared`.
+- **M5 Basic Memory adapter** (Cat B): reads `~/basic-memory/**/*.md` Markdown files with YAML frontmatter (title, tags, note_type, timestamps).
+- **M5 OpenCode adapter** (Cat A): reads `~/.local/share/opencode/` sessions (platform-aware: `LOCALAPPDATA` on Windows, `XDG_DATA_HOME` on Linux/macOS) by parsing tiered `message/*.json` + `part/*.json` structure.
+- **M5 `omem adapter search`**: queries the npm registry for `@omem-adapter/*` packages with display name, version, and description.
+- **M5 `omem stats`**: scans all detected adapters and reports per-source record counts, corrupt lines, and presence status.
+- **M5 `omem prune`**: removes records from the canonical SQLite store by age (`--older-than <duration>`) and/or deduplication (`--deduplicate`, keeps newest per fingerprint).
+- New error code: `OMEM-E45-SEARCH-FAILED`.
+- E2E test for adapter install roundtrip: install → list → uninstall → verify removal (`tests/e2e/adapter.e2e.test.ts`, 5 new tests).
 - `.cursor/rules/release-checklist.mdc`: pre-release documentation currency and quality checklist.
 - M5 roadmap plan in `docs/ROADMAP.md`.
+
+### Changed
+- `VERSION` bumped to `0.1.0-alpha.4`.
+- Built-in adapter count: 4 → 7 (added gemini-cli, basic-memory, opencode).
+- `docs/CLI.md` updated with `omem stats`, `omem prune`, and `omem adapter search` sections.
+- `AGENTS.md`, `README.md`, `ADAPTER-SDK.md`, `ROADMAP.md` updated for M5 scope.
+
+### Fixed
+- All pre-existing typecheck errors resolved (unused imports, `exactOptionalPropertyTypes` mismatches, `FakeAdapter` missing `storageRoot`). TypeScript `tsc --noEmit` now exits clean.
+- Suite total now **511 tests**, 0 failures.
 
 ## [0.1.0-alpha.3] - 2026-05-18
 
@@ -58,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Node-targeted CJS bundle (`packages/cli/dist/cli.cjs`) was implicitly bundling `bun:sqlite`, which crashed `node ./dist/cli.cjs ...` with `Cannot find module 'bun:sqlite'`. The build now passes `--external bun:sqlite`, and `canonical-store.ts` lazy-loads `bun:sqlite` via `createRequire(import.meta.url)` after a runtime check (`isBun`). Under Node, canonical-store features now fail cleanly with `OMEM-E34-CANONICAL-RUNTIME` and a "install Bun / use the prebuilt binary" hint, while adapter-only commands (`recall`, `scan`, `migrate`, `export`, `import`, `upgrade`, `mcp install`) continue to work.
 
 ### Known issues
-- 9 pre-existing typecheck errors in test files (`packages/mcp/tests/tools.test.ts`, `packages/cli/tests/upgrade-cmd.test.ts` fetch cast). These do not block the test suite (455/455 pass) and predate M2; tracked separately for cleanup.
+- 9 pre-existing typecheck errors in test files (`packages/mcp/tests/tools.test.ts`, `packages/cli/tests/upgrade-cmd.test.ts` fetch cast). These do not block the test suite (455/455 pass) and predate M2; tracked separately for cleanup. **Fixed in 0.1.0-alpha.4.**
 
 ## [0.1.0-alpha.1] - 2026-05-15
 

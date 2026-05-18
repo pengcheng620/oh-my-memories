@@ -12,10 +12,17 @@
     },
     "packages/adapter-sdk": {
       "name": "@oh-my-memories/adapter-sdk",
-      "version": "0.0.0",
+      "version": "1.0.0",
     },
     "packages/adapters/_shared": {
       "name": "@oh-my-memories/adapter-shared",
+      "version": "0.0.0",
+      "dependencies": {
+        "@oh-my-memories/adapter-sdk": "workspace:*",
+      },
+    },
+    "packages/adapters/basic-memory": {
+      "name": "@oh-my-memories/adapter-basic-memory",
       "version": "0.0.0",
       "dependencies": {
         "@oh-my-memories/adapter-sdk": "workspace:*",
@@ -45,6 +52,21 @@
         "@oh-my-memories/adapter-shared": "workspace:*",
       },
     },
+    "packages/adapters/gemini-cli": {
+      "name": "@oh-my-memories/adapter-gemini-cli",
+      "version": "0.0.0",
+      "dependencies": {
+        "@oh-my-memories/adapter-sdk": "workspace:*",
+        "@oh-my-memories/adapter-shared": "workspace:*",
+      },
+    },
+    "packages/adapters/opencode": {
+      "name": "@oh-my-memories/adapter-opencode",
+      "version": "0.0.0",
+      "dependencies": {
+        "@oh-my-memories/adapter-sdk": "workspace:*",
+      },
+    },
     "packages/adapters/serena": {
       "name": "@oh-my-memories/adapter-serena",
       "version": "0.0.0",
@@ -54,15 +76,18 @@
     },
     "packages/cli": {
       "name": "oh-my-memories",
-      "version": "0.1.0-alpha.1",
+      "version": "0.1.0-alpha.2",
       "bin": {
         "omem": "./bin/omem.cjs",
         "oh-my-memories": "./bin/omem.cjs",
       },
       "dependencies": {
+        "@oh-my-memories/adapter-basic-memory": "workspace:*",
         "@oh-my-memories/adapter-claude-code": "workspace:*",
         "@oh-my-memories/adapter-codex": "workspace:*",
         "@oh-my-memories/adapter-cursor": "workspace:*",
+        "@oh-my-memories/adapter-gemini-cli": "workspace:*",
+        "@oh-my-memories/adapter-opencode": "workspace:*",
         "@oh-my-memories/adapter-sdk": "workspace:*",
         "@oh-my-memories/adapter-serena": "workspace:*",
         "@oh-my-memories/core": "workspace:*",
@@ -80,7 +105,7 @@
     },
     "packages/mcp": {
       "name": "@oh-my-memories/mcp",
-      "version": "0.1.0-alpha.1",
+      "version": "0.1.0-alpha.2",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@oh-my-memories/adapter-claude-code": "workspace:*",
@@ -118,11 +143,17 @@
 
     "@modelcontextprotocol/sdk": ["@modelcontextprotocol/sdk@1.29.0", "https://registry.npmmirror.com/@modelcontextprotocol/sdk/-/sdk-1.29.0.tgz", { "dependencies": { "@hono/node-server": "^1.19.9", "ajv": "^8.17.1", "ajv-formats": "^3.0.1", "content-type": "^1.0.5", "cors": "^2.8.5", "cross-spawn": "^7.0.5", "eventsource": "^3.0.2", "eventsource-parser": "^3.0.0", "express": "^5.2.1", "express-rate-limit": "^8.2.1", "hono": "^4.11.4", "jose": "^6.1.3", "json-schema-typed": "^8.0.2", "pkce-challenge": "^5.0.0", "raw-body": "^3.0.0", "zod": "^3.25 || ^4.0", "zod-to-json-schema": "^3.25.1" }, "peerDependencies": { "@cfworker/json-schema": "^4.1.1" }, "optionalPeers": ["@cfworker/json-schema"] }, "sha512-zo37mZA9hJWpULgkRpowewez1y6ML5GsXJPY8FI0tBBCd77HEvza4jDqRKOXgHNn867PVGCyTdzqpz0izu5ZjQ=="],
 
+    "@oh-my-memories/adapter-basic-memory": ["@oh-my-memories/adapter-basic-memory@workspace:packages/adapters/basic-memory"],
+
     "@oh-my-memories/adapter-claude-code": ["@oh-my-memories/adapter-claude-code@workspace:packages/adapters/claude-code"],
 
     "@oh-my-memories/adapter-codex": ["@oh-my-memories/adapter-codex@workspace:packages/adapters/codex"],
 
     "@oh-my-memories/adapter-cursor": ["@oh-my-memories/adapter-cursor@workspace:packages/adapters/cursor"],
+
+    "@oh-my-memories/adapter-gemini-cli": ["@oh-my-memories/adapter-gemini-cli@workspace:packages/adapters/gemini-cli"],
+
+    "@oh-my-memories/adapter-opencode": ["@oh-my-memories/adapter-opencode@workspace:packages/adapters/opencode"],
 
     "@oh-my-memories/adapter-sdk": ["@oh-my-memories/adapter-sdk@workspace:packages/adapter-sdk"],
 

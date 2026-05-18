@@ -35,8 +35,13 @@ COMMANDS (M3)
 
 COMMANDS (M4)
   adapter list                      List all adapters (built-ins + installed plugins)
+  adapter search [query]            Search npm for @omem-adapter/* packages
   adapter install <pkg>             Install a third-party adapter plugin from npm
   adapter uninstall <id>            Remove an installed adapter plugin
+
+COMMANDS (M5)
+  stats [--json]                    Show total records, per-source counts
+  prune --older-than <dur>          Remove old/duplicate records from canonical store
 
 GLOBAL OPTIONS
   --json                        Emit JSON to stdout, NDJSON warnings on stderr
@@ -77,7 +82,7 @@ USAGE
 
 OPTIONS
   --json              Emit a JSON array; see docs/CLI.md schema.
-  --source=<name>     Restrict to one adapter: claude-code | cursor | codex | serena
+  --source=<name>     Restrict to one adapter: claude-code | cursor | codex | gemini-cli | opencode | basic-memory | serena
   --since=<duration>  Only count records newer than this duration; e.g. 7d, 2026-01-01
 
 EXAMPLES
@@ -315,12 +320,16 @@ const ADAPTER_HELP = `omem adapter - manage third-party adapter plugins
 
 USAGE
   omem adapter list
+  omem adapter search [query]
   omem adapter install <package-spec>
   omem adapter uninstall <adapter-id | package-name>
 
 SUBCOMMANDS
   list                      List all loaded adapters (built-ins + installed plugins).
                             Warnings about failed or colliding plugins are shown on stderr.
+
+  search [query]            Search npm for @omem-adapter/* packages.
+                            If no query, lists all published packages.
 
   install <spec>            Install a plugin adapter.
                             <spec> can be:
@@ -367,6 +376,43 @@ EXAMPLES
   omem mcp serve
 `;
 
+const STATS_HELP = `omem stats - show total records and per-source counts
+
+USAGE
+  omem stats [--json]
+
+DESCRIPTION
+  Scans all detected adapters and reports aggregate statistics:
+  total record count, per-source counts, corrupt lines, and presence.
+
+OPTIONS
+  --json     Emit structured stats as JSON.
+
+EXAMPLES
+  omem stats
+  omem stats --json
+`;
+
+const PRUNE_HELP = `omem prune - remove old or duplicate records from the canonical store
+
+USAGE
+  omem prune [--older-than <duration>] [--deduplicate] [--json]
+
+DESCRIPTION
+  Removes records from the canonical SQLite store. At least one of
+  '--older-than' or '--deduplicate' must be provided.
+
+OPTIONS
+  --older-than <duration>   Remove records older than this (e.g. 90d, 2025-01-01).
+  --deduplicate             Remove duplicate records (keeps the newest per fingerprint).
+  --json                    Emit structured result as JSON.
+
+EXAMPLES
+  omem prune --older-than 90d
+  omem prune --deduplicate
+  omem prune --older-than 180d --deduplicate --json
+`;
+
 export const HELP_TEXT: Readonly<Record<string, string>> = {
   __global__: GLOBAL_HELP,
   init: INIT_HELP,
@@ -382,6 +428,8 @@ export const HELP_TEXT: Readonly<Record<string, string>> = {
   upgrade: UPGRADE_HELP,
   remember: REMEMBER_HELP,
   adapter: ADAPTER_HELP,
+  stats: STATS_HELP,
+  prune: PRUNE_HELP,
 };
 
 /**
