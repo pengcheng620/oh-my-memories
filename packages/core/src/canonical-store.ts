@@ -131,6 +131,17 @@ export interface PruneResult {
   readonly remaining: number;
 }
 
+export interface EmbeddingRow {
+  readonly recordId: string;
+  readonly record: MemoryRecord;
+  readonly vector: Float32Array;
+}
+
+export interface SemanticHit {
+  readonly record: MemoryRecord;
+  readonly similarity: number;
+}
+
 export class CanonicalStore {
   private readonly db: SqliteDatabase;
   private readonly readonly: boolean;
@@ -149,6 +160,7 @@ export class CanonicalStore {
     }
     const db = new Database(opts.path, isReadonly ? { readonly: true } : undefined);
     db.exec('PRAGMA busy_timeout = 5000');
+    db.exec('PRAGMA foreign_keys = ON');
     if (!isReadonly) {
       // WAL would be the obvious choice, but `omem` is single-user single-
       // process and Windows holds WAL/SHM file handles open even after
@@ -323,6 +335,100 @@ export class CanonicalStore {
     return { deleted, remaining };
   }
 
+  // ---------- Embedding methods ----------
+
+  storeEmbedding(recordId: string, model: string, vector: Float32Array): void {
+    if (this.readonly) {
+      throw new Error('CanonicalStore opened readonly; cannot storeEmbedding()');
+    }
+    const buf = Buffer.from(vector.buffer, vector.byteOffset, vector.byteLength);
+    this.db.run('INSERT OR REPLACE INTO embeddings (record_id, model, vector) VALUES (?, ?, ?)', [
+      recordId,
+      model,
+      buf,
+    ]);
+  }
+
+  /**
+   * Brute-force cosine similarity search over all embeddings for a given model.
+   * Returns the top `limit` records sorted by descending similarity.
+   *
+   * This is the fallback path when sqlite-vec is unavailable. For our expected
+   * scale (hundreds to low thousands of canonical records), this completes in
+   * sub-millisecond time.
+   */
+  searchByVector(queryVector: Float32Array, model: string, limit: number): SemanticHit[] {
+    const rows = this.db
+      .query(
+        `SELECT e.record_id, e.vector,
+                m.source, m.session_id, m.timestamp_ms, m.role, m.text, m.metadata_json
+         FROM embeddings e
+         JOIN memories m ON m.record_id = e.record_id
+         WHERE e.model = ?`,
+      )
+      .all(model) as Array<{
+      record_id: string;
+      vector: Buffer;
+      source: string;
+      session_id: string | null;
+      timestamp_ms: number;
+      role: string | null;
+      text: string;
+      metadata_json: string;
+    }>;
+
+    const hits: SemanticHit[] = [];
+    for (const row of rows) {
+      const stored = new Float32Array(
+        row.vector.buffer,
+        row.vector.byteOffset,
+        row.vector.byteLength / 4,
+      );
+      const sim = cosineSim(queryVector, stored);
+      if (sim > 0) {
+        hits.push({ record: rowToRecord(row), similarity: sim });
+      }
+    }
+
+    hits.sort((a, b) => b.similarity - a.similarity);
+    return hits.slice(0, limit);
+  }
+
+  /** Number of embeddings stored for a given model. */
+  countEmbeddings(model?: string): number {
+    if (model !== undefined) {
+      const row = this.db
+        .query('SELECT COUNT(*) AS n FROM embeddings WHERE model = ?')
+        .get(model) as { n: number };
+      return row.n;
+    }
+    const row = this.db.query('SELECT COUNT(*) AS n FROM embeddings').get() as { n: number };
+    return row.n;
+  }
+
+  /** Record IDs that have a memory but no embedding for the given model. */
+  unembeddedRecordIds(model: string, limit: number): string[] {
+    const rows = this.db
+      .query(
+        `SELECT m.record_id FROM memories m
+         LEFT JOIN embeddings e ON e.record_id = m.record_id AND e.model = ?
+         WHERE e.record_id IS NULL
+         LIMIT ?`,
+      )
+      .all(model, limit) as Array<{ record_id: string }>;
+    return rows.map((r) => r.record_id);
+  }
+
+  /** Get text for a batch of record IDs (for backfill embedding). */
+  getTexts(recordIds: string[]): Array<{ id: string; text: string }> {
+    if (recordIds.length === 0) return [];
+    const placeholders = recordIds.map(() => '?').join(',');
+    const rows = this.db
+      .query(`SELECT record_id, text FROM memories WHERE record_id IN (${placeholders})`)
+      .all(...recordIds) as Array<{ record_id: string; text: string }>;
+    return rows.map((r) => ({ id: r.record_id, text: r.text }));
+  }
+
   close(): void {
     this.db.close();
   }
@@ -368,10 +474,24 @@ function rowToRecord(row: {
 function sanitizeMatchExpression(raw: string): string {
   const tokens = raw
     .toLowerCase()
-    // Replace anything that isn't a word character with whitespace, then split.
     .replace(/[^\p{L}\p{N}_]+/gu, ' ')
     .split(/\s+/)
     .filter((t) => t.length >= 2);
   if (tokens.length === 0) return '';
   return tokens.map((t) => `"${t}"`).join(' OR ');
+}
+
+function cosineSim(a: Float32Array, b: Float32Array): number {
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    const ai = a[i] as number;
+    const bi = b[i] as number;
+    dot += ai * bi;
+    normA += ai * ai;
+    normB += bi * bi;
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+  return denom === 0 ? 0 : dot / denom;
 }

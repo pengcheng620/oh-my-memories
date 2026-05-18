@@ -1,10 +1,11 @@
 import { type MatchReason, type Provenance, recall as federatedRecall } from '@oh-my-memories/core';
+import { loadConfig } from '@oh-my-memories/core/src/config';
 import { createAdapterById, loadAdapterById, loadAllAdapters } from '../adapters';
 import { createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult, writeJsonWarning } from '../output/json';
 import { type TableColumn, renderTable, writeTextError, writeTextWarning } from '../output/table';
 import { parseDuration } from '../parse/duration';
-import { canonicalDbPath } from '../platform/paths';
+import { canonicalDbPath, configPath } from '../platform/paths';
 import type { CommandContext, CommandHandler } from './types';
 
 export const recall: CommandHandler = async (ctx: CommandContext): Promise<number> => {
@@ -53,15 +54,15 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     return 1;
   }
 
+  const cfg = loadConfig(configPath({ env: ctx.env }));
+
   const recallOpts = {
     query: args.value.query,
     ...(args.value.source !== undefined ? { sources: [args.value.source] } : {}),
     ...(args.value.limit !== undefined ? { limit: args.value.limit } : {}),
     ...(args.value.sinceMs !== undefined ? { since: new Date(args.value.sinceMs) } : {}),
-    // Always pass the canonical DB path; federation is cold-start safe and
-    // skips the canonical arm when the file is missing. So this just enables
-    // BM25 fusion *if* the user has run `omem remember` at least once.
     canonicalStorePath: canonicalDbPath({ env: ctx.env }),
+    embeddingConfig: cfg.embedding,
   };
   const result = await federatedRecall(resolvedAdapters, recallOpts);
 

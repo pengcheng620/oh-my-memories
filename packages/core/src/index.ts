@@ -6,6 +6,7 @@ export * from './migrate';
 export * from './export';
 export * from './import';
 export * from './canonical-store';
+export * from './embedding';
 export {
   MIGRATIONS,
   LATEST_SCHEMA_VERSION,

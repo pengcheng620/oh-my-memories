@@ -18,6 +18,7 @@ interface Database {
 }
 
 import { MIGRATION_001_CANONICAL_INIT } from './migrations/001-canonical-init.sql.inline';
+import { MIGRATION_002_EMBEDDINGS } from './migrations/002-embeddings.sql.inline';
 
 export interface Migration {
   /** Monotonic, starts at 1. */
@@ -30,6 +31,7 @@ export interface Migration {
 
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, name: 'canonical-init', sql: MIGRATION_001_CANONICAL_INIT },
+  { version: 2, name: 'embeddings', sql: MIGRATION_002_EMBEDDINGS },
 ];
 
 /** Latest version known to this build. */

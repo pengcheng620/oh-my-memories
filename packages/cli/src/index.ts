@@ -1,15 +1,16 @@
 import { adapter } from './commands/adapter';
 import { config } from './commands/config';
 import { doctor } from './commands/doctor';
+import { embed } from './commands/embed';
 import { exportCmd } from './commands/export';
 import { helpFor } from './commands/help';
 import { importCmd } from './commands/import';
 import { init } from './commands/init';
 import { mcp } from './commands/mcp';
 import { migrate } from './commands/migrate';
+import { prune } from './commands/prune';
 import { recall } from './commands/recall';
 import { remember } from './commands/remember';
-import { prune } from './commands/prune';
 import { scan } from './commands/scan';
 import { skills } from './commands/skills';
 import { stats } from './commands/stats';
@@ -42,6 +43,7 @@ const COMMANDS: Readonly<Record<string, CommandHandler>> = {
   recall,
   doctor,
   config,
+  embed,
   skills,
   mcp,
   migrate,
