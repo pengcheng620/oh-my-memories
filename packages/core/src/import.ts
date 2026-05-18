@@ -19,6 +19,13 @@ export const ADAPTER_HOME_SUBPATHS: Record<string, readonly string[]> = {
   cursor: ['.cursor', 'projects'],
   codex: ['.codex', 'sessions'],
   serena: ['.serena'],
+  'gemini-cli': ['.gemini'],
+  'basic-memory': ['basic-memory'],
+  aider: [],
+  'copilot-chat': ['Code', 'User'],
+  opencode: process.platform === 'win32'
+    ? ['AppData', 'Local', 'opencode']
+    : ['.local', 'share', 'opencode'],
 };
 
 export interface ImportInput {

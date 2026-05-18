@@ -115,6 +115,10 @@ export async function runExport(input: ExportInput): Promise<ExportResult> {
       bytes += buf.byteLength;
     }
     files.sort();
+    if (files.length === 0) {
+      skippedSources.push(adapter.id);
+      continue;
+    }
     sourceEntries.push({
       id: adapter.id,
       schemaId: adapter.schemaId,

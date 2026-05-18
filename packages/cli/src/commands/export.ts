@@ -159,7 +159,10 @@ function adapterFactoryOptions(ctx: CommandContext): { home?: string } {
   return {};
 }
 
+const PROJECT_LOCAL_ADAPTERS = new Set(['aider', 'serena']);
+
 function storageRootOf(adapter: { id: string; storageRoot?: () => string }): string {
+  if (PROJECT_LOCAL_ADAPTERS.has(adapter.id)) return '';
   if (typeof adapter.storageRoot === 'function') return adapter.storageRoot();
   return '';
 }
