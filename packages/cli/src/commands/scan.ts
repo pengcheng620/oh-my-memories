@@ -1,5 +1,5 @@
 import { inventory, schemaVersionFor } from '@oh-my-memories/core';
-import { createAdapterById, createAllAdapters } from '../adapters';
+import { createAdapterById, loadAdapterById, loadAllAdapters } from '../adapters';
 import { createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult } from '../output/json';
 import { type TableColumn, renderTable, writeTextError } from '../output/table';
@@ -16,12 +16,15 @@ export const scan: CommandHandler = async (ctx: CommandContext): Promise<number>
 
   const adapters = args.value.source
     ? (() => {
-        const a = createAdapterById(args.value.source);
-        return a ? [a] : [];
+        // Fast-path: try builtin first, then async plugin search.
+        const builtin = createAdapterById(args.value.source);
+        if (builtin) return Promise.resolve([builtin]);
+        return loadAdapterById(args.value.source, { env: ctx.env }).then((a) => (a ? [a] : []));
       })()
-    : createAllAdapters();
+    : loadAllAdapters({ env: ctx.env });
 
-  if (adapters.length === 0) {
+  const resolvedAdapters = await adapters;
+  if (resolvedAdapters.length === 0) {
     const error = createOmemError({
       code: 'OMEM-E03-NO-SOURCES',
       message: args.value.source
@@ -33,10 +36,10 @@ export const scan: CommandHandler = async (ctx: CommandContext): Promise<number>
     return 1;
   }
 
-  const entries = await inventory(adapters);
+  const entries = await inventory(resolvedAdapters);
 
   // Drain each adapter's scan to populate lastScanStats.
-  for (const adapter of adapters) {
+  for (const adapter of resolvedAdapters) {
     try {
       for await (const _record of adapter.scan()) {
         /* drain */
@@ -57,9 +60,9 @@ export const scan: CommandHandler = async (ctx: CommandContext): Promise<number>
   }
 
   const rows: ScanRow[] = entries.map((entry) => {
-    const adapter = adapters.find((a) => a.id === entry.adapterId);
+    const adapterEntry = resolvedAdapters.find((a) => a.id === entry.adapterId);
     const stats = (
-      adapter as { lastScanStats?: { recordCount: number; corruptLines: number } | null }
+      adapterEntry as { lastScanStats?: { recordCount: number; corruptLines: number } | null }
     )?.lastScanStats;
     return {
       id: entry.adapterId,

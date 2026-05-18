@@ -25,3 +25,9 @@ export function canonicalDbPath(options: ResolveHomeOptions = {}): string {
 export function logsDir(options: ResolveHomeOptions = {}): string {
   return resolve(resolveOmemHome(options), 'logs');
 }
+
+// Root for adapter plugin packages, modelled as a private node_modules tree.
+// Layout: ~/.omem/node_modules/@omem-adapter/<adapter-name>/
+export function pluginDir(options: ResolveHomeOptions = {}): string {
+  return resolve(resolveOmemHome(options), 'node_modules');
+}

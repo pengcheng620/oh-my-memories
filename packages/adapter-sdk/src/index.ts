@@ -22,8 +22,15 @@ export interface ScanOptions {
   since?: Date;
   limit?: number;
   signal?: AbortSignal;
+  /** Free-text search hint (Cat C / SaaS adapters may use this for remote pre-filtering). */
+  query?: string;
 }
 
+/**
+ * Summary statistics returned by an adapter's scan pass.
+ * Adapters may emit this as a final entry or via a side-channel;
+ * it is NOT part of the scan() AsyncIterable contract.
+ */
 export interface ScanResult {
   recordCount: number;
   corruptLines: number;
@@ -36,6 +43,12 @@ export interface IBaseAdapter {
   readonly id: string;
   readonly category: AdapterCategory;
   readonly displayName: string;
+  /**
+   * Semver of this adapter implementation (e.g. "0.1.0").
+   * Optional; defaults to "0.0.0" when not supplied.
+   * Used by `omem adapter list` to display the installed version.
+   */
+  readonly version?: string;
 
   detect(): Promise<DetectResult>;
   scan(opts?: ScanOptions): AsyncIterable<MemoryRecord>;
@@ -53,7 +66,11 @@ export interface IMcpAdapter extends IBaseAdapter {
 
 export interface ISaasAdapter extends IBaseAdapter {
   readonly category: 'saas';
-  fetchRecords(query?: string): AsyncIterable<MemoryRecord>;
+  /**
+   * @deprecated Use `scan(opts)` with `opts.query` instead.
+   * `fetchRecords` will be removed in adapter-sdk@2.0.0.
+   */
+  fetchRecords?(query?: string): AsyncIterable<MemoryRecord>;
 }
 
 export type AnyAdapter = IIdeAdapter | IMcpAdapter | ISaasAdapter;

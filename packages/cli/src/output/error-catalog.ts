@@ -186,6 +186,50 @@ export const ERROR_CATALOG = {
     summary: 'A flag was overridden by a more specific flag on the same command.',
     defaultHint: 'Drop the redundant flag to silence this warning.',
   },
+
+  // ─── 4x: Plugin / adapter management (M4) ───────────────────────────────
+  'OMEM-E40-NO-PACKAGE-MANAGER': {
+    code: 'OMEM-E40-NO-PACKAGE-MANAGER',
+    kind: 'error',
+    summary: 'Neither bun nor npm could be found in PATH to install the adapter plugin.',
+    defaultHint:
+      "Install Bun (https://bun.sh) or Node.js/npm and ensure the binary is on your PATH, then retry.",
+  },
+  'OMEM-E41-PLUGIN-INSTALL-FAILED': {
+    code: 'OMEM-E41-PLUGIN-INSTALL-FAILED',
+    kind: 'error',
+    summary: 'The package manager command to install the adapter plugin returned a non-zero exit.',
+    defaultHint:
+      "Check the output above for details, or run with --verbose. The package may not exist on npm or may have a bad package.json.",
+  },
+  'OMEM-E42-PLUGIN-LOAD-FAILED': {
+    code: 'OMEM-E42-PLUGIN-LOAD-FAILED',
+    kind: 'error',
+    summary: 'An installed adapter plugin could not be loaded (bad export or import error).',
+    defaultHint:
+      "Run 'omem doctor' to see which plugin is broken, or 'omem adapter uninstall <id>' to remove it.",
+  },
+  'OMEM-E43-PLUGIN-NOT-FOUND': {
+    code: 'OMEM-E43-PLUGIN-NOT-FOUND',
+    kind: 'error',
+    summary: 'No installed plugin with the given adapter ID was found.',
+    defaultHint: "Run 'omem adapter list' to see installed adapters, then retry with a valid ID.",
+  },
+  'OMEM-E44-PLUGIN-UNINSTALL-FAILED': {
+    code: 'OMEM-E44-PLUGIN-UNINSTALL-FAILED',
+    kind: 'error',
+    summary: 'Removing the installed adapter plugin directory failed.',
+    defaultHint:
+      'Check file permissions on ~/.omem/node_modules/, or manually delete the directory.',
+  },
+
+  'OMEM-W02-PLUGIN-ID-COLLISION': {
+    code: 'OMEM-W02-PLUGIN-ID-COLLISION',
+    kind: 'warning',
+    summary: 'Two installed plugins advertise the same adapter ID; the first one wins.',
+    defaultHint:
+      "Run 'omem adapter list' to see which packages collide, then uninstall the duplicate.",
+  },
 } as const satisfies Record<string, ErrorCatalogEntry>;
 
 /** Union of every code in the catalog (compile-time safety). */

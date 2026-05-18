@@ -74,6 +74,12 @@ Every code is **append-only** — never reorder or reuse a number.
 | `OMEM-E33-CANONICAL-DB-NEWER` | error | Canonical store schema_version is newer than this omem build understands. |
 | `OMEM-E34-CANONICAL-RUNTIME` | error | Canonical store features (omem remember / canonical recall) require the Bun runtime or a Bun-compiled binary. |
 | `OMEM-W01-FLAG` | warning | A flag was overridden by a more specific flag on the same command. |
+| `OMEM-E40-NO-PACKAGE-MANAGER` | error | Neither bun nor npm could be found in PATH to install the adapter plugin. |
+| `OMEM-E41-PLUGIN-INSTALL-FAILED` | error | The package manager command to install the adapter plugin returned a non-zero exit. |
+| `OMEM-E42-PLUGIN-LOAD-FAILED` | error | An installed adapter plugin could not be loaded (bad export or import error). |
+| `OMEM-E43-PLUGIN-NOT-FOUND` | error | No installed plugin with the given adapter ID was found. |
+| `OMEM-E44-PLUGIN-UNINSTALL-FAILED` | error | Removing the installed adapter plugin directory failed. |
+| `OMEM-W02-PLUGIN-ID-COLLISION` | warning | Two installed plugins advertise the same adapter ID; the first one wins. |
 
 ## Commands (M1)
 
@@ -509,3 +515,68 @@ omem remember 'meeting notes …' --session weekly-2026-05-15 --role user
 ```
 
 **EXIT CODES**: `0` success · `1` store I/O / SQLite error · `2` bad args / empty text.
+
+## Commands (M4)
+
+### `omem adapter`
+
+Manages third-party adapter plugins installed at `~/.omem/node_modules/@omem-adapter/`.
+
+#### `omem adapter list`
+
+**SYNOPSIS**
+```text
+omem adapter list [--json]
+```
+
+**DESCRIPTION**
+Lists all loaded adapters: the four built-in adapters (claude-code, cursor, codex, serena)
+plus any plugins installed via `omem adapter install`. Plugin warnings and load errors are
+printed to stderr.
+
+**JSON SCHEMA**
+```json
+{
+  "command": "adapter list",
+  "adapters": [
+    {
+      "id": "string",
+      "category": "ide | mcp | saas",
+      "displayName": "string",
+      "version": "string",
+      "builtin": true
+    }
+  ]
+}
+```
+
+**EXIT CODES**: `0` success.
+
+#### `omem adapter install`
+
+**SYNOPSIS**
+```text
+omem adapter install <package-spec> [--json]
+```
+
+**DESCRIPTION**
+Installs a plugin adapter package into `~/.omem/node_modules/`. Requires `bun` or `npm`
+to be on `PATH`. Accepts npm package names, `name@version`, or local paths.
+
+**ERROR CODES**: `OMEM-E40-NO-PACKAGE-MANAGER`, `OMEM-E41-PLUGIN-INSTALL-FAILED`.
+
+**EXIT CODES**: `0` success · `1` install failed · `2` bad args.
+
+#### `omem adapter uninstall`
+
+**SYNOPSIS**
+```text
+omem adapter uninstall <adapter-id | @omem-adapter/package-name> [--json]
+```
+
+**DESCRIPTION**
+Removes an installed plugin by adapter ID or full package name.
+
+**ERROR CODES**: `OMEM-E43-PLUGIN-NOT-FOUND`, `OMEM-E44-PLUGIN-UNINSTALL-FAILED`.
+
+**EXIT CODES**: `0` success · `1` uninstall failed · `2` bad args.

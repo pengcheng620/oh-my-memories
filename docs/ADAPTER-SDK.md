@@ -1,6 +1,6 @@
 # ADAPTER-SDK.md — write your own adapter
 
-> **Status**: SDK exists in M1; semver-major-stable in M4. Until M4, breaking changes can happen in any minor.
+> **Status**: `@oh-my-memories/adapter-sdk@1.0.0` is semver-major-stable as of M4. No breaking changes until 2.0.0.
 
 ## What an adapter does
 
@@ -40,6 +40,9 @@ export class MyToolAdapter implements IIdeAdapter {
   readonly id = 'my-tool';
   readonly category = 'ide' as const;
   readonly displayName = 'My Tool';
+  // Optional: semver of your adapter package.
+  // Shown by `omem adapter list` so users know which version is installed.
+  readonly version = '1.0.0';
 
   storageRoot(): string {
     return join(homedir(), '.my-tool', 'memory');
@@ -102,11 +105,68 @@ Then in `packages/adapters/<your-adapter>/tests/`:
 - `scan.test.ts` — emits expected records from `valid.jsonl`
 - `corrupt.test.ts` — handles `corrupt-line.jsonl` without throwing
 
-## Publishing your adapter
+## Publishing your adapter (M4+)
 
-Until M4, adapters live in this monorepo. Open a PR adding `packages/adapters/<your-tool>/`.
+Third-party adapters publish under the `@omem-adapter/*` npm scope and are discovered
+automatically by `omem adapter install` / `omem adapter list`.
 
-After M4, 3rd-party adapters can publish under the npm scope `@omem-adapter/<your-tool>`. The CLI will auto-discover them via `omem adapter list` / `install`.
+### Minimum `package.json`
+
+```json
+{
+  "name": "@omem-adapter/my-tool",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "peerDependencies": {
+    "@oh-my-memories/adapter-sdk": ">=1.0.0"
+  }
+}
+```
+
+**Why `peerDependencies`?** The CLI bundles `adapter-sdk`; listing it as a peer prevents
+a second copy of the types landing in the plugin and causing `instanceof` mismatches.
+
+### Default export
+
+Your package's main entry **must** have a default export that satisfies `IBaseAdapter`:
+
+```ts
+// src/index.ts
+import type { IIdeAdapter } from '@oh-my-memories/adapter-sdk';
+import { MyToolAdapter } from './adapter.js';
+
+const adapter: IIdeAdapter = new MyToolAdapter();
+export default adapter;
+```
+
+The plugin loader reads `module.default` first, then the module namespace itself. An
+anonymous `export default` works just as well as a named class.
+
+### Installing and testing locally
+
+```bash
+# Install during development (local path install):
+omem adapter install ./path/to/my-tool
+
+# Verify it loaded:
+omem adapter list
+
+# Run a real scan:
+omem scan
+
+# Remove it:
+omem adapter uninstall my-tool
+```
+
+### ID collision policy
+
+If two installed plugins share the same `id`, the first one loaded (alphabetically by
+package directory name) wins and a `OMEM-W02-PLUGIN-ID-COLLISION` warning is emitted.
+Pick a unique, hyphen-separated ID in the `@omem-adapter/*` namespace.
 
 ## Contributing checklist
 
@@ -115,7 +175,9 @@ After M4, 3rd-party adapters can publish under the npm scope `@omem-adapter/<you
 - [ ] Streaming `scan()`
 - [ ] Schema drift / corrupt-line tolerance
 - [ ] Cross-platform path resolution
-- [ ] All 4 mandatory tests
+- [ ] All 3+ mandatory tests
 - [ ] Fixtures in `tests/fixtures/<adapter>/`
-- [ ] README in `packages/adapters/<your-tool>/`
-- [ ] Listed in this doc + `AGENTS.md` § Packages
+- [ ] README in package root
+- [ ] `version` field set on adapter class
+- [ ] `peerDependencies` on `@oh-my-memories/adapter-sdk >= 1.0.0`
+- [ ] Tested with `omem adapter install ./local-path` before publishing

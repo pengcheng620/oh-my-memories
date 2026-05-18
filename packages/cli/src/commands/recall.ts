@@ -1,5 +1,5 @@
 import { recall as federatedRecall } from '@oh-my-memories/core';
-import { createAdapterById, createAllAdapters } from '../adapters';
+import { createAdapterById, loadAdapterById, loadAllAdapters } from '../adapters';
 import { createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult, writeJsonWarning } from '../output/json';
 import { type TableColumn, renderTable, writeTextError, writeTextWarning } from '../output/table';
@@ -35,12 +35,17 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
 
   const adapters = args.value.source
     ? (() => {
-        const a = createAdapterById(args.value.source, adapterOpts);
-        return a ? [a] : [];
+        const builtin = createAdapterById(args.value.source, adapterOpts);
+        if (builtin) return Promise.resolve([builtin]);
+        return loadAdapterById(args.value.source, { home: adapterOpts?.home, env: ctx.env }).then(
+          (a) => (a ? [a] : []),
+        );
       })()
-    : createAllAdapters(adapterOpts);
+    : loadAllAdapters({ home: adapterOpts?.home, env: ctx.env });
 
-  if (adapters.length === 0 && args.value.source) {
+  const resolvedAdapters = await adapters;
+
+  if (resolvedAdapters.length === 0 && args.value.source) {
     const error = createOmemError({
       code: 'OMEM-E03-NO-SOURCES',
       message: `Unknown source: '${args.value.source}'.`,
@@ -60,7 +65,7 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     // BM25 fusion *if* the user has run `omem remember` at least once.
     canonicalStorePath: canonicalDbPath({ env: ctx.env }),
   };
-  const result = await federatedRecall(adapters, recallOpts);
+  const result = await federatedRecall(resolvedAdapters, recallOpts);
 
   // Partial success: some adapters failed, some returned hits.
   if (result.partial) {

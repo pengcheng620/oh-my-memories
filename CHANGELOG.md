@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **M4 Adapter SDK 1.0.0**: `@oh-my-memories/adapter-sdk` is now semver-major-stable. Breaking changes require a 2.0.0 bump. Changes in this release: `ScanOptions.query` field for remote pre-filtering hints; `IBaseAdapter.version?: string` for adapter self-reporting; `ISaasAdapter.fetchRecords()` deprecated (use `scan(opts)` with `opts.query`); orphaned `ScanResult` type retained but marked as optional statistics, not part of `scan()` return type.
+- **M4 Plugin loader** (`platform/plugin-loader.ts`): scans `~/.omem/node_modules/@omem-adapter/*`, dynamically imports each package, validates the default export against `IBaseAdapter`, handles ID collisions (`OMEM-W02`), and wraps sync generator `scan()` into `AsyncIterable` automatically.
+- **M4 Plugin installer** (`platform/plugin-installer.ts`): `installPlugin(spec)` delegates to `bun add` or `npm install --prefix ~/.omem/node_modules` (first found in PATH). Supports npm names, `name@version`, and local paths. `uninstallPlugin(pkg)` removes by package directory.
+- **M4 `omem adapter` command** with three subcommands: `list` (built-ins + plugins, JSON schema with `id/category/version/builtin`), `install <spec>`, `uninstall <id-or-pkg>`.
+- **M4 async adapter registry**: `loadAllAdapters()` and `loadAdapterById()` in `adapters.ts`; built-in sync variants deprecated. `scan`, `recall`, and `migrate` commands now route through the async variants so plugin adapters are available everywhere.
+- New error codes: `OMEM-E40-NO-PACKAGE-MANAGER`, `OMEM-E41-PLUGIN-INSTALL-FAILED`, `OMEM-E42-PLUGIN-LOAD-FAILED`, `OMEM-E43-PLUGIN-NOT-FOUND`, `OMEM-E44-PLUGIN-UNINSTALL-FAILED`; new warning `OMEM-W02-PLUGIN-ID-COLLISION`.
+- New tests: 7 unit tests for `plugin-loader.test.ts` (100% coverage), 11 CLI integration tests for `adapter-cmd.test.ts`. Suite total now **478 tests**.
+
+### Changed
+- `VERSION` bumped to `0.1.0-alpha.3` (unreleased).
+- `docs/ADAPTER-SDK.md` rewritten with M4 packaging guide (default export contract, `package.json` template, `peerDependencies`, local-path install workflow).
+- Global help text and `help.ts` updated with M4 `adapter` commands.
+
 ## [0.1.0-alpha.2] - 2026-05-18
 
 ### Added

@@ -5,7 +5,7 @@ import {
   isWritableAdapter,
 } from '@oh-my-memories/adapter-sdk';
 import { MigrationError, runMigration, writeManifest } from '@oh-my-memories/core';
-import { ALL_ADAPTER_IDS, createAdapterById } from '../adapters';
+import { ALL_ADAPTER_IDS, loadAdapterById } from '../adapters';
 import { type OmemError, createOmemError } from '../output/error';
 import { writeJsonError, writeJsonResult } from '../output/json';
 import { writeTextError } from '../output/table';
@@ -37,7 +37,7 @@ export const migrate: CommandHandler = async (ctx: CommandContext): Promise<numb
   }
 
   const adapterOpts = adapterFactoryOptions(ctx);
-  const source = createAdapterById(args.value.from, adapterOpts);
+  const source = await loadAdapterById(args.value.from, { ...adapterOpts, env: ctx.env });
   if (source === undefined) {
     return reject(
       ctx,
@@ -47,7 +47,7 @@ export const migrate: CommandHandler = async (ctx: CommandContext): Promise<numb
       }),
     );
   }
-  const destination = createAdapterById(args.value.to, adapterOpts);
+  const destination = await loadAdapterById(args.value.to, { ...adapterOpts, env: ctx.env });
   if (destination === undefined) {
     return reject(
       ctx,

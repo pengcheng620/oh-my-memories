@@ -1,6 +1,6 @@
 {
   "name": "@oh-my-memories/adapter-sdk",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Public adapter interface for oh-my-memories. Implement these to add a new memory source.",
   "license": "MIT",
   "type": "module",

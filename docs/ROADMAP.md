@@ -106,14 +106,16 @@ Promotes omem from "federation hub" to "memory home for tools that lack native m
 | Background scan / file-watch incremental indexing | 🔲 deferred — manual `omem remember` is enough for M3 acceptance |
 | Optional embedding (`sqlite-vec`); user opts in | 🔲 deferred to M3.1 — gated by user demand |
 
-## M4 — Adapter SDK as public surface
+## M4 — Adapter SDK as public surface ✅
 
 | Component | Status |
-|----|----|
-| Stabilize `adapter-sdk` at semver-major 1.0.0 | 🔲 |
-| `omem adapter list` / `omem adapter install <name>` | 🔲 |
-| Plugin discovery (npm scope `@omem-adapter/*`) | 🔲 |
-| Author guide live at `docs/ADAPTER-SDK.md` | 🔲 |
+|----|-----|
+| Stabilize `adapter-sdk` at semver-major 1.0.0 | ✅ |
+| `omem adapter list` / `install` / `uninstall` | ✅ |
+| Plugin discovery (`~/.omem/node_modules/@omem-adapter/*`) | ✅ |
+| Plugin loader: validate, ID-collision guard, sync-scan wrap | ✅ |
+| Author guide live at `docs/ADAPTER-SDK.md` | ✅ |
+| New error codes OMEM-E40..E44, OMEM-W02 | ✅ |
 
 ## M5+ — Future bets
 

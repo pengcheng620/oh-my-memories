@@ -1,3 +1,4 @@
+import { adapter } from './commands/adapter';
 import { config } from './commands/config';
 import { doctor } from './commands/doctor';
 import { exportCmd } from './commands/export';
@@ -32,6 +33,7 @@ import { parseGlobalFlags } from './parse/global-flags';
 // test trivial — every command name has exactly one declaration site.
 
 const COMMANDS: Readonly<Record<string, CommandHandler>> = {
+  adapter,
   init,
   scan,
   recall,
@@ -58,7 +60,7 @@ export interface MainOptions {
   readonly stdinIsTty?: boolean;
 }
 
-const VERSION = '0.1.0-alpha.1';
+const VERSION = '0.1.0-alpha.2';
 
 /**
  * Run the CLI.

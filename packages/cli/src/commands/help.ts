@@ -33,6 +33,11 @@ COMMANDS (M2)
 COMMANDS (M3)
   remember <text>                   Store a memory in omem's own canonical store
 
+COMMANDS (M4)
+  adapter list                      List all adapters (built-ins + installed plugins)
+  adapter install <pkg>             Install a third-party adapter plugin from npm
+  adapter uninstall <id>            Remove an installed adapter plugin
+
 GLOBAL OPTIONS
   --json                        Emit JSON to stdout, NDJSON warnings on stderr
   --verbose                     Log each adapter scan + include cause in errors
@@ -306,6 +311,39 @@ EXAMPLES
   omem upgrade --apply        # bun install -g oh-my-memories@latest
 `;
 
+const ADAPTER_HELP = `omem adapter - manage third-party adapter plugins
+
+USAGE
+  omem adapter list
+  omem adapter install <package-spec>
+  omem adapter uninstall <adapter-id | package-name>
+
+SUBCOMMANDS
+  list                      List all loaded adapters (built-ins + installed plugins).
+                            Warnings about failed or colliding plugins are shown on stderr.
+
+  install <spec>            Install a plugin adapter.
+                            <spec> can be:
+                              @omem-adapter/my-adapter          (latest from npm)
+                              @omem-adapter/my-adapter@1.2.3    (pinned version)
+                              ./my-adapter                      (local path)
+                            Requires bun or npm to be on PATH.
+
+  uninstall <id-or-pkg>     Remove an installed plugin.
+                            Accepts either the adapter ID (e.g. 'my-adapter')
+                            or the full package name (@omem-adapter/my-adapter).
+
+OPTIONS
+  --json     Emit structured output for all subcommands.
+
+EXAMPLES
+  omem adapter list
+  omem adapter install @omem-adapter/serena-cloud
+  omem adapter install ./path/to/my-local-adapter
+  omem adapter uninstall my-adapter
+  omem adapter uninstall @omem-adapter/serena-cloud
+`;
+
 const MCP_HELP = `omem mcp - run as MCP server, or wire into an IDE
 
 USAGE
@@ -343,6 +381,7 @@ export const HELP_TEXT: Readonly<Record<string, string>> = {
   import: IMPORT_HELP,
   upgrade: UPGRADE_HELP,
   remember: REMEMBER_HELP,
+  adapter: ADAPTER_HELP,
 };
 
 /**
