@@ -80,6 +80,7 @@ Every code is **append-only** — never reorder or reuse a number.
 | `OMEM-E43-PLUGIN-NOT-FOUND` | error | No installed plugin with the given adapter ID was found. |
 | `OMEM-E44-PLUGIN-UNINSTALL-FAILED` | error | Removing the installed adapter plugin directory failed. |
 | `OMEM-E45-SEARCH-FAILED` | error | Searching the npm registry for adapter packages failed. |
+| `OMEM-E46-EMBEDDING-UNAVAILABLE` | error | Embedding model loading or inference failed. |
 | `OMEM-W02-PLUGIN-ID-COLLISION` | warning | Two installed plugins advertise the same adapter ID; the first one wins. |
 
 ## Commands (M1)
@@ -157,7 +158,7 @@ omem scan --source=cursor --since=7d
 
 ### `omem recall`
 
-**SYNOPSIS** &nbsp; `omem recall <query> [--all] [--source=<name>] [--limit=<n>] [--since=<duration>] [--json]`
+**SYNOPSIS** &nbsp; `omem recall <query> [--all] [--source=<name>] [--limit=<n>] [--since=<duration>] [--context] [--json]`
 
 **DESCRIPTION**
 Federated search. Searches **all** detected sources by default (devex-verdict D1).
@@ -171,6 +172,7 @@ Matching is BM25 in M1; embeddings arrive in M3+.
 | `--source=<name>` | (none) | Search ONLY this adapter; **overrides** `--all` and emits `OMEM-W01-FLAG`. |
 | `--limit=<n>` | 50 | Cap the result count. |
 | `--since=<duration>` | (none) | Filter by recency; same syntax as `omem scan`. |
+| `--context` | off | Emit compact `[source] text` lines for agent context injection instead of a table. |
 | `--json` | off | Emit JSON results. |
 
 **JSON schema (success)**
@@ -195,6 +197,7 @@ Matching is BM25 in M1; embeddings arrive in M3+.
 omem recall "ai memory"                                # default: all sources
 omem recall "react hooks" --source=cursor --limit=20
 omem recall "deploy" --since=7d --json
+omem recall "project-name" --context --limit=5          # agent context block
 ```
 
 **EXIT CODES**: `0` results returned (zero hits is success) · `2` bad args · `5` partial scan.
@@ -681,3 +684,41 @@ omem watch --json         # watch with structured JSON events on stdout
 ```
 
 **EXIT CODES**: `0` clean shutdown · `1` watcher setup failed · `3` no sources detected.
+
+## Commands (M7)
+
+### `omem hooks`
+
+**SYNOPSIS**
+```text
+omem hooks install --ide=<ide>
+omem hooks uninstall --ide=<ide>
+omem hooks status
+```
+
+**DESCRIPTION**
+Installs file-based AI auto-recall hooks for supported IDEs. The installed files prompt
+the IDE agent to run `omem recall --context --limit=5` when starting or resuming work in
+a repository.
+
+Install is non-destructive. If the target file already exists and does not contain the
+omem managed marker, `install` refuses to overwrite it. `uninstall` removes only managed
+hook files.
+
+Supported IDEs: `claude-code`, `cursor`.
+
+**OPTIONS**
+
+| Flag | Purpose |
+|------|---------|
+| `--ide=<ide>` | Required for `install` and `uninstall`; one of `claude-code`, `cursor`. |
+| `--json` | Emit structured command results. |
+
+**EXAMPLES**
+```bash
+omem hooks install --ide=cursor
+omem hooks status
+omem hooks uninstall --ide=claude-code
+```
+
+**EXIT CODES**: `0` success · `1` filesystem conflict/error · `2` bad args.

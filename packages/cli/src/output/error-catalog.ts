@@ -229,6 +229,13 @@ export const ERROR_CATALOG = {
     summary: 'Searching the npm registry for adapter packages failed.',
     defaultHint: 'Check your network connection and try again.',
   },
+  'OMEM-E46-EMBEDDING-UNAVAILABLE': {
+    code: 'OMEM-E46-EMBEDDING-UNAVAILABLE',
+    kind: 'error',
+    summary: 'Embedding model loading or inference failed.',
+    defaultHint:
+      "Run 'omem config set embedding.enabled false' to disable semantic search, or retry after the local model download completes.",
+  },
 
   'OMEM-W02-PLUGIN-ID-COLLISION': {
     code: 'OMEM-W02-PLUGIN-ID-COLLISION',

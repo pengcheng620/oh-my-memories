@@ -89,7 +89,7 @@ export const embed: CommandHandler = async (ctx: CommandContext): Promise<number
     return 0;
   } catch (err) {
     const e = createOmemError({
-      code: 'OMEM-E40-EMBEDDING-UNAVAILABLE',
+      code: 'OMEM-E46-EMBEDDING-UNAVAILABLE',
       message: `Embedding failed: ${(err as Error).message}`,
       cause: err,
     });

@@ -248,48 +248,10 @@ async function recallSemantic(opts: RecallOptions): Promise<RecallHit[] | null> 
   }
 }
 
-/**
- * L2 Semantic Dedup: after RRF fusion, drop hits whose embedding is >threshold
- * cosine similarity with any higher-ranked hit. Only applies when embeddings
- * are available; records without embeddings are never dropped.
- */
-function semanticDedup(hits: RecallHit[], threshold: number): RecallHit[] {
-  const kept: RecallHit[] = [];
-  const keptVectors: Float32Array[] = [];
-
-  for (const hit of hits) {
-    const semanticReason = hit.provenance.matchReason.find((r) => r.type === 'semantic') as
-      | Extract<MatchReason, { type: 'semantic' }>
-      | undefined;
-
-    if (semanticReason === undefined) {
-      kept.push(hit);
-      continue;
-    }
-
-    // Check against all already-kept hits that have semantic vectors
-    const isDuplicate = false;
-    // We use the text fingerprint approach: if two hits have very similar text,
-    // their embeddings will be similar. Rather than re-embedding, we compare
-    // the similarity scores which are monotonic with the actual cosine.
-    // For true dedup we'd need the actual vectors; for now we use a
-    // text-hash-based check plus the provenance similarity score.
-    for (let i = 0; i < kept.length; i++) {
-      const keptVec = keptVectors[i];
-      if (keptVec === undefined) continue;
-      // If we had the actual vectors we'd compute cosine; since we don't store
-      // them on RecallHit, we use text similarity as a proxy.
-    }
-
-    // For the initial implementation: skip the expensive vector comparison and
-    // rely on the existing L1 fingerprint dedup (which already handles exact
-    // duplicates in fuseRRF). True L2 semantic dedup will activate once we
-    // carry vectors through the hit pipeline.
-    kept.push(hit);
-    keptVectors.push(new Float32Array(0));
-  }
-
-  return kept;
+// True L2 semantic dedup needs vectors carried through RecallHit. Until then,
+// RRF's existing fingerprint merge remains the active dedup path.
+function semanticDedup(hits: RecallHit[], _threshold: number): RecallHit[] {
+  return hits;
 }
 
 /**
@@ -314,7 +276,8 @@ function fuseRRF(lists: RecallHit[][]): RecallHit[] {
 
   for (const list of lists) {
     for (let idx = 0; idx < list.length; idx++) {
-      const hit = list[idx]!;
+      const hit = list[idx];
+      if (hit === undefined) continue;
       const fp = createFingerprint(hit.record);
       const contribution = 1 / (RRF_K + idx + 1);
       const existing = byFingerprint.get(fp);

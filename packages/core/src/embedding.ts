@@ -17,7 +17,7 @@ export interface EmbeddingProvider {
 }
 
 export class EmbeddingUnavailableError extends Error {
-  readonly code = 'OMEM-E40-EMBEDDING-UNAVAILABLE' as const;
+  readonly code = 'OMEM-E46-EMBEDDING-UNAVAILABLE' as const;
   constructor(message: string) {
     super(message);
     this.name = 'EmbeddingUnavailableError';
@@ -59,18 +59,22 @@ const DIMENSION_MAP: Record<string, number> = {
   'all-MiniLM-L6-v2': 384,
 };
 
+type FeatureExtractionPipeline = (
+  text: string,
+  options: { pooling: 'mean'; normalize: boolean },
+) => Promise<{ data: ArrayLike<number> }>;
+
 async function createLocalProvider(model: string): Promise<EmbeddingProvider> {
   const hfModel = MODEL_MAP[model] ?? model;
   const dimensions = DIMENSION_MAP[model] ?? 384;
 
-  let pipeline: Awaited<ReturnType<typeof import('@huggingface/transformers').then>['pipeline']>;
+  let pipeline: FeatureExtractionPipeline;
   try {
     const { pipeline: createPipeline } = await import('@huggingface/transformers');
-    // @ts-expect-error — Transformers.js pipeline() returns a typed pipeline;
-    // feature-extraction signature varies across versions.
-    pipeline = await createPipeline('feature-extraction', hfModel, {
+    const created = await createPipeline('feature-extraction', hfModel, {
       dtype: 'fp32',
     });
+    pipeline = created as unknown as FeatureExtractionPipeline;
   } catch (err) {
     throw new EmbeddingUnavailableError(
       `Failed to load embedding model '${hfModel}': ${(err as Error).message}. Ensure @huggingface/transformers is installed and the model is accessible.`,

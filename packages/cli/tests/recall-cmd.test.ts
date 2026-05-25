@@ -190,6 +190,22 @@ describe('omem recall (M7 provenance)', () => {
     expect(out).toContain('MATCHED BY');
   });
 
+  test('--context emits compact agent context without table headers', async () => {
+    {
+      const ctx = opts();
+      await main(['remember', 'prefer TypeScript strict mode for CLI packages'], ctx.options);
+    }
+    const ctx = opts();
+    const code = await main(['recall', 'typescript', '--context'], ctx.options);
+    expect(code).toBe(0);
+    const out = ctx.streams.stdout.text();
+    expect(out).toContain('[omem]');
+    expect(out).toContain('prefer TypeScript strict mode');
+    expect(out).not.toContain('SOURCE');
+    expect(out).not.toContain('SCORE');
+    expect(out).not.toContain('MATCHED BY');
+  });
+
   test('--verbose is a global flag (not per-command)', async () => {
     {
       const ctx = opts();

@@ -4,6 +4,7 @@ import { doctor } from './commands/doctor';
 import { embed } from './commands/embed';
 import { exportCmd } from './commands/export';
 import { helpFor } from './commands/help';
+import { hooks } from './commands/hooks';
 import { importCmd } from './commands/import';
 import { init } from './commands/init';
 import { mcp } from './commands/mcp';
@@ -44,6 +45,7 @@ const COMMANDS: Readonly<Record<string, CommandHandler>> = {
   doctor,
   config,
   embed,
+  hooks,
   skills,
   mcp,
   migrate,

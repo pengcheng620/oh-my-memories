@@ -78,6 +78,26 @@ export const recall: CommandHandler = async (ctx: CommandContext): Promise<numbe
     }
   }
 
+  if (args.value.context) {
+    const context = formatContextHits(result.hits);
+    if (ctx.flags.json) {
+      writeJsonResult(ctx, {
+        query: args.value.query,
+        context,
+        hits: result.hits.map((h) => ({
+          source: h.record.source,
+          id: h.record.id,
+          text: h.record.text,
+          provenance: serializeProvenance(h.provenance),
+        })),
+        ...(result.failures.length > 0 ? { failures: result.failures, partial: true } : {}),
+      });
+    } else {
+      ctx.stdout.write(context);
+    }
+    return result.partial ? 5 : 0;
+  }
+
   if (ctx.flags.json) {
     writeJsonResult(ctx, {
       query: args.value.query,
@@ -187,6 +207,7 @@ interface RecallArgs {
   readonly allExplicit: boolean;
   readonly limit?: number;
   readonly sinceMs?: number;
+  readonly context: boolean;
 }
 
 function parseRecallArgs(
@@ -197,10 +218,15 @@ function parseRecallArgs(
   let allExplicit = false;
   let limit: number | undefined;
   let sinceMs: number | undefined;
+  let context = false;
 
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i] as string;
 
+    if (token === '--context') {
+      context = true;
+      continue;
+    }
     if (token === '--all') {
       allExplicit = true;
       continue;
@@ -269,7 +295,7 @@ function parseRecallArgs(
       }),
     };
   }
-  const result: RecallArgs = { query, allExplicit };
+  const result: RecallArgs = { query, allExplicit, context };
   if (source !== undefined) (result as { source?: string }).source = source;
   if (limit !== undefined) (result as { limit?: number }).limit = limit;
   if (sinceMs !== undefined) (result as { sinceMs?: number }).sinceMs = sinceMs;
@@ -340,4 +366,13 @@ function formatMatchReasons(reasons: MatchReason[]): string {
       }
     })
     .join(' + ');
+}
+
+function formatContextHits(hits: Awaited<ReturnType<typeof federatedRecall>>['hits']): string {
+  if (hits.length === 0) return '';
+  return `${hits.map((hit) => `[${hit.record.source}] ${compactText(hit.record.text)}`).join('\n')}\n`;
+}
+
+function compactText(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
 }

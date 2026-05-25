@@ -43,6 +43,10 @@ COMMANDS (M5)
   stats [--json]                    Show total records, per-source counts
   prune --older-than <dur>          Remove old/duplicate records from canonical store
 
+COMMANDS (M7)
+  embed --backfill                  Compute embeddings for canonical memories
+  hooks install --ide=<ide>         Install AI auto-recall hook files
+
 GLOBAL OPTIONS
   --json                        Emit JSON to stdout, NDJSON warnings on stderr
   --verbose                     Log each adapter scan + include cause in errors
@@ -94,7 +98,7 @@ EXAMPLES
 const RECALL_HELP = `omem recall - federated search
 
 USAGE
-  omem recall <query> [--all] [--source=<name>] [--limit=<n>] [--json]
+  omem recall <query> [--all] [--source=<name>] [--limit=<n>] [--context] [--json]
 
 DESCRIPTION
   Searches every detected source by default (devex-verdict D1). The query is
@@ -105,6 +109,7 @@ OPTIONS
   --source=<name>     Search ONLY this adapter; overrides --all (OMEM-W01-FLAG).
   --limit=<n>         Cap the result count; default 50.
   --since=<duration>  Filter by recency; same syntax as 'omem scan'.
+  --context           Emit compact source-prefixed lines for agent context injection.
   --json              Emit JSON results.
 
 EXAMPLES
@@ -376,6 +381,27 @@ EXAMPLES
   omem mcp serve
 `;
 
+const HOOKS_HELP = `omem hooks - install AI auto-recall hook files
+
+USAGE
+  omem hooks install --ide=<ide>
+  omem hooks uninstall --ide=<ide>
+  omem hooks status
+
+DESCRIPTION
+  Installs file-based preview hooks that prompt supported IDEs to run
+  'omem recall --context' when starting or resuming work in a repository.
+  Install is non-destructive: unmanaged existing files are never overwritten.
+
+OPTIONS
+  --ide=<ide>     One of: claude-code | cursor (case-insensitive)
+
+EXAMPLES
+  omem hooks install --ide=cursor
+  omem hooks status
+  omem hooks uninstall --ide=claude-code
+`;
+
 const STATS_HELP = `omem stats - show total records and per-source counts
 
 USAGE
@@ -427,6 +453,7 @@ export const HELP_TEXT: Readonly<Record<string, string>> = {
   import: IMPORT_HELP,
   upgrade: UPGRADE_HELP,
   remember: REMEMBER_HELP,
+  hooks: HOOKS_HELP,
   adapter: ADAPTER_HELP,
   stats: STATS_HELP,
   prune: PRUNE_HELP,

@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type {
@@ -98,7 +98,9 @@ export class AiderAdapter implements IIdeAdapter {
         const sub = await this.#findHistoryFiles(join(dir, entry.name), depth + 1);
         out.push(...sub);
       }
-    } catch { /* permission denied, etc. */ }
+    } catch {
+      /* permission denied, etc. */
+    }
 
     return out;
   }

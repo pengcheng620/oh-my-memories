@@ -81,7 +81,7 @@ export function getConfigValue(config: OmemConfig, key: string): unknown {
 }
 
 export function setConfigValue(config: OmemConfig, key: string, value: string): OmemConfig {
-  const updated = { ...config, embedding: { ...config.embedding } };
+  const updated: OmemConfig = { ...config, embedding: { ...config.embedding } };
   if (key === 'sources') {
     updated.sources = value.split(',').map((s) => s.trim());
   } else if (key === 'defaultLimit') {

@@ -55,18 +55,18 @@ $ omem recall --all "JWT refresh flow"         # federated search across ALL too
 
 ## Supported Adapters
 
-| Adapter | Source | Format | Category |
-|---------|--------|--------|----------|
-| **Claude Code** | `~/.claude/projects/*.jsonl` | JSONL | AI IDE |
-| **Cursor** | `~/.cursor/projects/*/agent-transcripts/*.jsonl` | JSONL | AI IDE |
-| **Codex** | `~/.codex/sessions/*.jsonl` | JSONL | AI IDE |
-| **Gemini CLI** | `~/.gemini/tmp/<hash>/chats/*.jsonl` | JSONL | AI IDE |
-| **Aider** | `.aider.chat.history.md` (per-project) | Markdown | AI IDE |
-| **Copilot Chat** | VS Code `workspaceStorage/*/chatSessions/*.jsonl` | JSONL (mutation replay) | AI IDE |
-| **Serena** | `.serena/memories/*.md` (per-project) | Markdown + YAML | MCP |
-| **OpenCode** | `~/.local/share/opencode/` sessions | JSON | AI IDE |
-| **Basic Memory** | `~/basic-memory/**/*.md` | Markdown + YAML | MCP |
-| **Plugin adapters** | `@omem-adapter/*` from npm | Any | Community |
+| Adapter             | Source                                            | Format                  | Category  |
+| ------------------- | ------------------------------------------------- | ----------------------- | --------- |
+| **Claude Code**     | `~/.claude/projects/*.jsonl`                      | JSONL                   | AI IDE    |
+| **Cursor**          | `~/.cursor/projects/*/agent-transcripts/*.jsonl`  | JSONL                   | AI IDE    |
+| **Codex**           | `~/.codex/sessions/*.jsonl`                       | JSONL                   | AI IDE    |
+| **Gemini CLI**      | `~/.gemini/tmp/<hash>/chats/*.jsonl`              | JSONL                   | AI IDE    |
+| **Aider**           | `.aider.chat.history.md` (per-project)            | Markdown                | AI IDE    |
+| **Copilot Chat**    | VS Code `workspaceStorage/*/chatSessions/*.jsonl` | JSONL (mutation replay) | AI IDE    |
+| **Serena**          | `.serena/memories/*.md` (per-project)             | Markdown + YAML         | MCP       |
+| **OpenCode**        | `~/.local/share/opencode/` sessions               | JSON                    | AI IDE    |
+| **Basic Memory**    | `~/basic-memory/**/*.md`                          | Markdown + YAML         | MCP       |
+| **Plugin adapters** | `@omem-adapter/*` from npm                        | Any                     | Community |
 
 ## Quick Start
 
@@ -94,52 +94,52 @@ omem mcp install --ide=cursor          # supports: claude / cursor / codex / gem
 
 ### Search & Discovery
 
-| Command | What it does |
-|---------|-------------|
-| `omem scan` | Inventory every memory source on your machine |
-| `omem recall --all "<query>"` | Federated BM25+RRF search across all sources |
-| `omem stats` | Per-source record counts and health at a glance |
-| `omem watch` | Monitor source files, auto-rescan on change |
+| Command                       | What it does                                    |
+| ----------------------------- | ----------------------------------------------- |
+| `omem scan`                   | Inventory every memory source on your machine   |
+| `omem recall --all "<query>"` | Federated BM25+RRF search across all sources    |
+| `omem stats`                  | Per-source record counts and health at a glance |
+| `omem watch`                  | Monitor source files, auto-rescan on change     |
 
 ### Memory Management
 
-| Command | What it does |
-|---------|-------------|
-| `omem remember "<text>"` | Write to the local canonical store (SQLite+FTS5) |
-| `omem prune --older-than 90d` | Clean up canonical store (age + dedup) |
-| `omem migrate --from cc --to cursor` | Move memories between tools (dry-run by default) |
-| `omem export --all` | Portable `.tar.gz` backup of all home-based sources |
-| `omem import backup.tar.gz` | Restore from backup |
+| Command                              | What it does                                        |
+| ------------------------------------ | --------------------------------------------------- |
+| `omem remember "<text>"`             | Write to the local canonical store (SQLite+FTS5)    |
+| `omem prune --older-than 90d`        | Clean up canonical store (age + dedup)              |
+| `omem migrate --from cc --to cursor` | Move memories between tools (dry-run by default)    |
+| `omem export --all`                  | Portable `.tar.gz` backup of all home-based sources |
+| `omem import backup.tar.gz`          | Restore from backup                                 |
 
 ### Integration
 
-| Command | What it does |
-|---------|-------------|
-| `omem mcp serve` | Start MCP server (IDE agents call `omem_recall` / `omem_scan`) |
-| `omem mcp install --ide=cursor` | Wire MCP server into IDE config |
-| `omem skills install --ide=cursor` | Install a SKILL.md that teaches the agent to use omem |
-| `omem adapter install @omem-adapter/x` | Install community adapters from npm |
-| `omem adapter search` | Find adapters on npm registry |
+| Command                                | What it does                                                   |
+| -------------------------------------- | -------------------------------------------------------------- |
+| `omem mcp serve`                       | Start MCP server (IDE agents call `omem_recall` / `omem_scan`) |
+| `omem mcp install --ide=cursor`        | Wire MCP server into IDE config                                |
+| `omem skills install --ide=cursor`     | Install a SKILL.md that teaches the agent to use omem          |
+| `omem adapter install @omem-adapter/x` | Install community adapters from npm                            |
+| `omem adapter search`                  | Find adapters on npm registry                                  |
 
 ### Maintenance
 
-| Command | What it does |
-|---------|-------------|
-| `omem init` | First-time setup (detects sources, writes config) |
-| `omem doctor` | Health check (versions, adapters, schema, denylist) |
-| `omem upgrade` | Self-update from npm |
-| `omem config` | View/edit configuration |
+| Command        | What it does                                        |
+| -------------- | --------------------------------------------------- |
+| `omem init`    | First-time setup (detects sources, writes config)   |
+| `omem doctor`  | Health check (versions, adapters, schema, denylist) |
+| `omem upgrade` | Self-update from npm                                |
+| `omem config`  | View/edit configuration                             |
 
 ## Why Not Just Use mem0 / Letta / Zep?
 
 Those tools are **engines** — they store memory. We are a **hub** — we manage memory that already exists across all your tools, **including theirs**.
 
-| | Memory Engines (mem0, Letta, Zep) | oh-my-memories |
-|--|---|---|
-| **Role** | Store & retrieve memory | Federate & migrate existing memory |
-| **Cross-tool** | No — each is its own silo | Yes — reads from 9+ sources at once |
-| **Own engine** | Yes (primary purpose) | Yes (M3+, for tools without native memory) |
-| **Integration breadth** | 1 store | 9 built-in adapters + plugin ecosystem |
+|                         | Memory Engines (mem0, Letta, Zep) | oh-my-memories                             |
+| ----------------------- | --------------------------------- | ------------------------------------------ |
+| **Role**                | Store & retrieve memory           | Federate & migrate existing memory         |
+| **Cross-tool**          | No — each is its own silo         | Yes — reads from 9+ sources at once        |
+| **Own engine**          | Yes (primary purpose)             | Yes (M3+, for tools without native memory) |
+| **Integration breadth** | 1 store                           | 9 built-in adapters + plugin ecosystem     |
 
 Read [`docs/PRODUCT.md`](./docs/PRODUCT.md) for the full thesis.
 
